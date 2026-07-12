@@ -1,69 +1,80 @@
 # Proof of Possible
 
-**Proof of Possible** is a private, local-first browser app for stalled solo builders and learners. It turns an overwhelming goal into one small, falsifiable real-world experiment, runs a proof sprint of ten minutes or less, and records what reality says.
+**Proof of Possible v2.0.0** is a local-first browser app that compiles one overwhelming goal and one binding constraint into a small, preregistered real-world experiment.
 
-Completed, attempted, and blocked are all valid outcomes. The product explicitly does not claim that motivation or effort can erase structural barriers.
+Completed, attempted, and blocked remain valid. Observations are explicitly self-recorded and are never presented as independently verified truth.
 
 **Deployment:** <https://kody-w.github.io/rappterbook-impossible-product/>
 
-## Frame 1 product loop
+## Frame 2 product loop
 
-1. **Name + Compress the Impossible** — capture the goal, why it matters, binding constraint, observable proof, timebox, and baseline confidence. A deterministic generator creates one editable mission with success and stop conditions.
-2. **Run One Proof Sprint** — use a wall-clock deadline that persists across reloads and never pretends to pause. An infeasible mission can be simplified without losing its original wording, revision reason, or deadline.
-3. **Evidence Receipt + Value Measurement** — record completed, attempted, or blocked with a note or URL, compare post-confidence to baseline, keep local history, and display First-Evidence Rate.
+1. **Compile with minimum input** — enter a goal and binding constraint, then choose one deterministic pattern: ask a person, make a tiny artifact, check a real constraint, or send a reversible probe.
+2. **Review and preregister** — edit one action, target/artifact, explicit criterion, numeric scope, stop condition, and one-to-ten-minute timebox. Optional why/confidence stays secondary. Scope reduction must lower the declared number.
+3. **Run one non-coercive sprint** — mission and criterion freeze at start and survive reload. The countdown can be hidden and stops updating while a receipt is entered.
+4. **Record criterion-linked evidence** — separately record whether action began, completed/attempted/blocked status, observation, criterion verdict, optional URL, and action time.
+5. **Make the next decision** — stop, continue, revise by shrinking, or seek access. A successor links to its immutable predecessor.
 
-## Privacy
+The honest local funnel is:
 
-There are no accounts, analytics, cookies, third-party runtime assets, AI calls, or backend requests. Goals and receipts remain in the browser’s `localStorage`. Saved evidence URLs are displayed but never fetched by the app. Clearing browser site data—or using **Clear local data**—removes the record.
+> **Criterion-Linked Evidence Rate = evidence-bearing, criterion-judged receipts / sprints started**
+
+The numerator and denominator are always visible. Drafts do not count.
+
+## Recoverable local workspace
+
+- Intake and review drafts autosave before commitment without entering history or metrics.
+- Back preserves the draft; Discard explicitly removes only the draft.
+- A validated v2 envelope, v1 migration, duplicate recovery journal, revisions, storage events, and additive goal merges protect receipts and deadlines.
+- JSON import validates fully before merging. Malformed files cannot replace current data.
+- Export → delete → import round-trips the workspace.
+
+Data is local to this browser profile on this device, **not universally private**. Anyone or any software with access to the profile, device, or plain-JSON export may be able to read it. There are no accounts, analytics, AI calls, cookies, third-party runtime assets, or goal-data backend requests.
 
 ## Run locally
 
-The application is static. Python is only used here as a convenient local file server:
-
 ```bash
-python3 -m http.server 8000
+npm ci
+npm run build
+node scripts/serve.mjs
 ```
 
-Open <http://localhost:8000>. Opening `index.html` directly may prevent the browser from loading the local evolution JSON.
+Open <http://127.0.0.1:4173>.
 
 ## Test and build
 
-Node.js 20 or newer is sufficient; there is no install step and no dependency download.
+Node.js 20 or newer is required.
 
 ```bash
-# Domain logic and deployment smoke test
-node --test tests/*.test.mjs
+# 25 domain/deployment tests plus HTML/JS/CSS static invariants
+npm test
 
-# Resource, accessibility, and evolution-data invariants
-node scripts/check-static.mjs
+# Real Chromium release contract (3 journeys)
+npx playwright install chromium
+npm run test:e2e
 
-# Produce the exact GitHub Pages artifact in _site/
-node scripts/build.mjs
+# Syntax and static Pages artifact
+npm run check
+npm run build
 ```
+
+`@playwright/test` is the only dependency, pinned exactly at `1.61.1` in `package-lock.json`. It is development-only: a real browser is the smallest reliable way to make broken DOM wiring, reload persistence, criterion drift, external requests, keyboard focus, and responsive overflow block both CI and Pages. The deployed app remains dependency-free.
 
 ## Architecture
 
 | Path | Responsibility |
 | --- | --- |
-| `index.html`, `styles.css` | Semantic, responsive interface with visible focus and reduced-motion support |
-| `src/core.mjs` | Pure validation, deterministic mission generation, state transitions, timer math, metrics, and serialization |
-| `src/app.mjs` | DOM rendering, keyboard-native interactions, wall-clock updates, and local persistence |
-| `evolution/frames/frame-01.json` | Machine-readable strategy, decision, acceptance, metric, test, and release evidence |
-| `evolution/timeline.json` | Twelve-frame timeline consumed by the interface |
-| `tests/` | Node built-in tests; no third-party test runner |
-| `.github/workflows/` | Test and GitHub Pages workflow deployment |
-
-State is a single versioned local object. Every goal retains `originalPlan`, `currentPlan`, zero or more provenance revisions, a persisted sprint deadline, and an optional outcome. First-Evidence Rate is computed as goals with outcomes divided by goals created.
+| `index.html`, `styles.css` | Semantic task-first interface, visible focus, reflow, and reduced motion |
+| `src/core.mjs` | Compiler, validation, preregistration, receipts, decisions, migrations, journal envelopes, imports, and merges |
+| `src/app.mjs` | DOM states, autosave, storage events, timer display, export/import/delete, and announcements |
+| `tests/core.test.mjs` | Pure domain, adversarial evidence, recovery, migration, and merge contracts |
+| `tests/release.spec.mjs` | Real Chromium journey, reload, responsive/keyboard, request-origin, and data-safety contract |
+| `evolution/strategies/frame-02/` | Eight distinct raw strategy audits |
+| `evolution/frames/frame-02.json` | Scoring, exactly three selected mutations, acceptance, metrics, tests, and release provenance |
+| `.github/workflows/` | Locked tests and browser contract before validation/deployment |
 
 ## Evolution protocol
 
-This repository evolves over twelve autonomous frames. Each frame must:
+This repository evolves over twelve autonomous frames. Each frame preserves independent strategy evidence, scores consensus transparently, selects exactly three product mutations, ships tested behavior, records value/release evidence, and leaves unselected future frames pending.
 
-1. preserve its independent strategy inputs and consensus rationale;
-2. select exactly three product mutations;
-3. define testable acceptance criteria and baseline/live value metrics;
-4. ship tested code rather than a speculative roadmap;
-5. append machine-readable evidence under `evolution/frames/`; and
-6. update the visible timeline while leaving unselected future frames pending.
-
-Frame 1 evidence is available at [`evolution/frames/frame-01.json`](evolution/frames/frame-01.json).
+- [Frame 1 evidence](evolution/frames/frame-01.json)
+- [Frame 2 evidence](evolution/frames/frame-02.json)

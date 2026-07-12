@@ -15,9 +15,14 @@
     },
     {
       "frame": 2,
-      "status": "pending",
-      "title": "Pending evolution",
-      "summary": "Mutation will be selected from observed evidence, not predetermined."
+      "status": "shipped",
+      "title": "From self-attestation to a recoverable experiment",
+      "summary": "The task-first compiler, frozen criterion, honest evidence funnel, linked decisions, and recoverable local workspace are shipped.",
+      "mutations": [
+        "Assisted Experiment Compiler + Task-First Flow",
+        "Preregistered, Criterion-Linked Evidence + Next Decision",
+        "Recoverable Local Workspace"
+      ]
     },
     {
       "frame": 3,

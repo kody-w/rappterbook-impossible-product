@@ -1,0 +1,281 @@
+{
+  "schemaVersion": 2,
+  "frame": 2,
+  "seed": "The Impossible Product.",
+  "product": {
+    "name": "Proof of Possible",
+    "version": "2.0.0",
+    "thesis": "Compile one constrained goal into a preregistered real-world experiment, preserve what happened honestly, and make the next decision recoverable.",
+    "ethicalBoundary": "Completed, attempted, and blocked remain valid. Self-recorded observations are never presented as independently verified truth."
+  },
+  "baseline": {
+    "liveUrl": "https://kody-w.github.io/rappterbook-impossible-product/",
+    "inspectedCommitSha": "64e9b9f2a6e01ae810fc2d43e9fe95f7bb3f9d63",
+    "inspectedAt": "2026-07-12T02:27:20.574Z",
+    "observations": {
+      "requiredIntakeDimensions": 6,
+      "freshUserMinimumBeforeReview": "four text inputs, one timebox, and one confidence value",
+      "metric": "First-Evidence Rate = any recorded outcome / goals created",
+      "storageSchemaVersion": 1,
+      "browserDomReleaseTests": 0,
+      "strategyEvidenceFiles": 0
+    }
+  },
+  "strategies": [
+    {
+      "id": "activation",
+      "source": "evolution/strategies/frame-02/activation.md",
+      "observed": "Six required dimensions and metrics before the task delayed first value.",
+      "proposal": "Two text inputs plus one proof pattern; defer optional context.",
+      "votes": {
+        "assisted-experiment-compiler": 5,
+        "criterion-linked-evidence": 4,
+        "recoverable-local-workspace": 4
+      }
+    },
+    {
+      "id": "clarity",
+      "source": "evolution/strategies/frame-02/clarity.md",
+      "observed": "The generic mission and prose-only simplification did not guarantee a concrete smaller task.",
+      "proposal": "Template action/target/criterion and require a reduced numeric scope.",
+      "votes": {
+        "assisted-experiment-compiler": 5,
+        "criterion-linked-evidence": 5,
+        "recoverable-local-workspace": 4
+      }
+    },
+    {
+      "id": "behavior",
+      "source": "evolution/strategies/frame-02/behavior.md",
+      "observed": "Criteria could change after start and receipts offered no status-specific decision.",
+      "proposal": "Preregister, record action timing, and branch through linked decisions.",
+      "votes": {
+        "assisted-experiment-compiler": 4,
+        "criterion-linked-evidence": 5,
+        "recoverable-local-workspace": 4
+      }
+    },
+    {
+      "id": "accessibility",
+      "source": "evolution/strategies/frame-02/accessibility.md",
+      "observed": "The timer could not be hidden and mobile/keyboard behavior lacked a browser contract.",
+      "proposal": "Non-coercive timer, dual-contrast focus, wrapping steps, and browser tests.",
+      "votes": {
+        "assisted-experiment-compiler": 4,
+        "criterion-linked-evidence": 4,
+        "recoverable-local-workspace": 5
+      }
+    },
+    {
+      "id": "measurement",
+      "source": "evolution/strategies/frame-02/measurement.md",
+      "observed": "Any outcome, including weak self-attestation, counted as first evidence.",
+      "proposal": "Count evidence-bearing criterion verdicts over sprints started.",
+      "votes": {
+        "assisted-experiment-compiler": 4,
+        "criterion-linked-evidence": 5,
+        "recoverable-local-workspace": 4
+      }
+    },
+    {
+      "id": "adversarial",
+      "source": "evolution/strategies/frame-02/adversarial.md",
+      "observed": "Two characters or a URL passed, mutable criteria enabled goalpost movement, and corrupt state reset clean.",
+      "proposal": "Meaningful observations, frozen criteria, validation, and journal recovery.",
+      "votes": {
+        "assisted-experiment-compiler": 4,
+        "criterion-linked-evidence": 5,
+        "recoverable-local-workspace": 5
+      }
+    },
+    {
+      "id": "retention",
+      "source": "evolution/strategies/frame-02/retention.md",
+      "observed": "Pre-commit thinking was not recoverable and receipts did not lead to a decision.",
+      "proposal": "Autosaved drafts, safe data controls, and linked successors.",
+      "votes": {
+        "assisted-experiment-compiler": 5,
+        "criterion-linked-evidence": 5,
+        "recoverable-local-workspace": 5
+      }
+    },
+    {
+      "id": "reliability",
+      "source": "evolution/strategies/frame-02/reliability.md",
+      "observed": "No migration, journal, merge, DOM contract, or JS/CSS network check protected the release.",
+      "proposal": "Validated envelopes, additive merges, pinned browser tests, and expanded network checks.",
+      "votes": {
+        "assisted-experiment-compiler": 4,
+        "criterion-linked-evidence": 4,
+        "recoverable-local-workspace": 5
+      }
+    }
+  ],
+  "consensus": {
+    "scoringMethod": "Each of the eight independent audits allocated 1 (reject) through 5 (must ship) to each cross-audit mutation. Scores are summed without weighting; maximum is 40. All three candidates exceeded the preregistered selection threshold of 32/40 and no fourth product mutation was introduced.",
+    "selectionThreshold": 32,
+    "maximumScore": 40,
+    "candidateScores": [
+      {
+        "id": "criterion-linked-evidence",
+        "auditVotes": [4, 5, 5, 4, 5, 5, 5, 4],
+        "total": 37,
+        "rank": 1,
+        "selected": true
+      },
+      {
+        "id": "recoverable-local-workspace",
+        "auditVotes": [4, 4, 4, 5, 4, 5, 5, 5],
+        "total": 36,
+        "rank": 2,
+        "selected": true
+      },
+      {
+        "id": "assisted-experiment-compiler",
+        "auditVotes": [5, 5, 4, 4, 4, 4, 5, 4],
+        "total": 35,
+        "rank": 3,
+        "selected": true
+      }
+    ],
+    "selectedCount": 3,
+    "rationale": "The audits converged on reducing activation work, preserving evidentiary integrity, and preventing local data loss. Browser release testing is required release infrastructure, not a fourth product mutation."
+  },
+  "selectedMutations": [
+    {
+      "id": "assisted-experiment-compiler",
+      "name": "ASSISTED EXPERIMENT COMPILER + TASK-FIRST FLOW",
+      "summary": "Two text inputs and one proof pattern deterministically produce one editable action, target/artifact, explicit criterion, numeric scope, stop condition, and one-to-ten-minute timebox."
+    },
+    {
+      "id": "criterion-linked-evidence",
+      "name": "PREREGISTERED, CRITERION-LINKED EVIDENCE + NEXT DECISION",
+      "summary": "Sprint start freezes mission and criterion; receipts separate action timing, compassionate status, observation, verdict, and verification boundary before a status-specific linked decision."
+    },
+    {
+      "id": "recoverable-local-workspace",
+      "name": "RECOVERABLE LOCAL WORKSPACE",
+      "summary": "Non-counting drafts, v1 migration, validated v2 envelopes, recovery journal, revision merge, and safe JSON export/import/delete protect local work."
+    }
+  ],
+  "acceptanceResults": {
+    "assisted-experiment-compiler": [
+      {
+        "criterion": "A fresh user reaches review with two text inputs and one proof choice.",
+        "status": "passed",
+        "evidence": "tests/core.test.mjs and tests/release.spec.mjs"
+      },
+      {
+        "criterion": "Every compiler output has an action verb, one target/artifact, explicit criterion, <=10-minute stop, and correct singular/plural copy.",
+        "status": "passed",
+        "evidence": "compiler matrix and one-minute unit tests"
+      },
+      {
+        "criterion": "Simplification strictly lowers a declared numeric scope variable.",
+        "status": "passed",
+        "evidence": "scope-reduction unit test"
+      }
+    ],
+    "criterion-linked-evidence": [
+      {
+        "criterion": "Mission and criterion remain unchanged across start and reload.",
+        "status": "passed",
+        "evidence": "Playwright criterion-integrity journey"
+      },
+      {
+        "criterion": "Two-character or URL-only input cannot become evidence-bearing.",
+        "status": "passed",
+        "evidence": "adversarial outcome validation tests"
+      },
+      {
+        "criterion": "Receipt separates action timing, activity status, observation, verdict, and independent-verification boundary.",
+        "status": "passed",
+        "evidence": "domain and DOM receipt assertions"
+      },
+      {
+        "criterion": "Metric always shows evidence-bearing receipts / sprints started.",
+        "status": "passed",
+        "evidence": "metric unit and browser assertions"
+      }
+    ],
+    "recoverable-local-workspace": [
+      {
+        "criterion": "Draft survives reload without entering history or metrics; Back preserves and Discard deliberately removes it.",
+        "status": "passed",
+        "evidence": "browser draft recovery and domain denominator tests"
+      },
+      {
+        "criterion": "Malformed import fails without data loss.",
+        "status": "passed",
+        "evidence": "browser malformed-import assertion"
+      },
+      {
+        "criterion": "Export, clear, and import restores the workspace; delete removes both primary and journal.",
+        "status": "passed",
+        "evidence": "browser round-trip release contract"
+      },
+      {
+        "criterion": "One corrupt primary payload and stale tab state cannot erase a committed receipt or deadline.",
+        "status": "passed",
+        "evidence": "journal recovery and additive merge unit tests"
+      }
+    ],
+    "release": [
+      {
+        "criterion": "Real Chromium journey, reload, keyboard, 320px overflow, and request-origin tests block Test and Pages workflows.",
+        "status": "passed",
+        "evidence": "tests/release.spec.mjs and both workflow definitions"
+      },
+      {
+        "criterion": "Static third-party checks include HTML, runtime JavaScript, and CSS.",
+        "status": "passed",
+        "evidence": "scripts/check-static.mjs"
+      }
+    ]
+  },
+  "metrics": {
+    "baseline": {
+      "source": "Frame 1 clean-browser live inspection",
+      "goalsCreated": 0,
+      "outcomesRecorded": 0,
+      "firstEvidenceRate": 0,
+      "requiredIntakeDimensions": 6
+    },
+    "frame2": {
+      "scope": "Per browser profile; no telemetry",
+      "formula": "evidence-bearing receipts with an explicit frozen-criterion verdict / sprints started",
+      "initialEvidenceBearingReceipts": 0,
+      "initialSprintsStarted": 0,
+      "initialCriterionLinkedEvidenceRate": 0,
+      "minimumInputsBeforeReview": "2 text inputs + 1 proof choice",
+      "telemetry": "none"
+    }
+  },
+  "tests": {
+    "unitAndStaticCommand": "npm test",
+    "browserCommand": "npm run test:e2e",
+    "status": "passed",
+    "unitPassed": 25,
+    "browserPassed": 3,
+    "failed": 0,
+    "recordedAt": "2026-07-12T02:49:15Z"
+  },
+  "release": {
+    "baselineCommitSha": "64e9b9f2a6e01ae810fc2d43e9fe95f7bb3f9d63",
+    "implementationCommitSha": null,
+    "firstVerifiedDeploymentCommitSha": null,
+    "deployedUrl": "https://kody-w.github.io/rappterbook-impossible-product/",
+    "deploymentStatus": "pending",
+    "pagesWorkflow": ".github/workflows/pages.yml",
+    "testWorkflow": ".github/workflows/test.yml",
+    "pagesWorkflowRunUrl": null,
+    "testWorkflowRunUrl": null,
+    "verifiedAt": null
+  },
+  "timestamps": {
+    "frameStartedAt": "2026-07-12T02:27:20.574Z",
+    "strategyEvidenceCapturedAt": "2026-07-12T02:35:00.000Z",
+    "implementationCompletedAt": "2026-07-12T02:49:15Z",
+    "releaseVerifiedAt": null
+  }
+}

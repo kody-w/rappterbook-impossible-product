@@ -1,17 +1,30 @@
 import {
+  JOURNAL_KEY,
+  LEGACY_STORAGE_KEY,
+  PROOF_PATTERNS,
   STORAGE_KEY,
+  compileDraft,
   computeMetrics,
   createEmptyState,
-  createGoal,
-  deserializeState,
+  createExport,
+  createLinkedDraft,
+  deserializeWorkspace,
+  discardDraft,
   findGoal,
   formatConfidenceDelta,
+  formatMinutes,
   getRemainingSeconds,
+  mergeStates,
+  parseImport,
+  recommendNextDecision,
   recordOutcome,
-  serializeState,
-  simplifyMission,
+  recoverWorkspace,
+  saveDraft,
+  serializeWorkspace,
+  setTimerHidden,
+  shrinkDraft,
   startSprint,
-  suggestSimplerPlan,
+  updateDraftReview,
   validateIntake,
   validateOutcome,
   validatePlan,
@@ -20,27 +33,23 @@ import {
 const panelNames = ["intake", "review", "sprint", "outcome", "receipt"];
 const stepIndexes = { intake: 0, review: 1, sprint: 2, outcome: 3, receipt: 3 };
 const fieldTargets = {
-  goal: "goal",
-  why: "why",
-  obstacle: "obstacle",
-  proof: "proof",
-  timeboxMinutes: "timeboxMinutes",
-  baselineConfidence: "baselineConfidence",
-  mission: "mission",
-  successCriterion: "successCriterion",
-  stopCondition: "stopCondition",
+  proofPattern: "proof-pattern-ask",
+  scope: "scopeValue",
+  actionKind: "action-taken",
   status: "status-completed",
-  evidence: "evidenceNote",
-  note: "evidenceNote",
-  url: "evidenceUrl",
-  postConfidence: "postConfidence",
+  criterionVerdict: "verdict-observed",
 };
 
 const element = (id) => document.getElementById(id);
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const writerId = globalThis.crypto?.randomUUID?.() ?? `tab-${Date.now()}`;
+
 let state = createEmptyState();
-let timerInterval = null;
+let storageRevision = 0;
 let storageAvailable = true;
+let timerInterval = null;
+let activePanel = "intake";
+let receiptGoalId = null;
 
 function makeElement(tagName, className, text) {
   const node = document.createElement(tagName);
@@ -57,11 +66,11 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-function createId() {
+function createId(prefix = "item") {
   if (globalThis.crypto?.randomUUID) {
-    return globalThis.crypto.randomUUID();
+    return `${prefix}-${globalThis.crypto.randomUUID()}`;
   }
-  return `goal-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function loadState() {
@@ -69,9 +78,18 @@ function loadState() {
     const probeKey = `${STORAGE_KEY}:probe`;
     localStorage.setItem(probeKey, "1");
     localStorage.removeItem(probeKey);
-    const loaded = deserializeState(localStorage.getItem(STORAGE_KEY));
+    const loaded = recoverWorkspace(
+      localStorage.getItem(STORAGE_KEY),
+      localStorage.getItem(JOURNAL_KEY),
+      localStorage.getItem(LEGACY_STORAGE_KEY),
+    );
     state = loaded.state;
+    storageRevision = loaded.revision;
     element("recovery-warning").hidden = !loaded.recovered;
+    element("migration-notice").hidden = !loaded.migrated;
+    if (loaded.migrated) {
+      persistState();
+    }
   } catch {
     storageAvailable = false;
     element("storage-warning").hidden = false;
@@ -84,7 +102,28 @@ function persistState() {
     return;
   }
   try {
-    localStorage.setItem(STORAGE_KEY, serializeState(state));
+    const currentRaw = localStorage.getItem(STORAGE_KEY);
+    if (currentRaw) {
+      try {
+        const current = deserializeWorkspace(currentRaw);
+        if (current.writerId !== writerId
+            && current.revision >= storageRevision) {
+          state = mergeStates(state, current.state);
+          storageRevision = current.revision;
+        }
+      } catch {
+        // A valid in-memory or journal state must not be replaced by corrupt primary data.
+      }
+    }
+    storageRevision += 1;
+    const serialized = serializeWorkspace(state, {
+      revision: storageRevision,
+      writtenAt: nowIso(),
+      writerId,
+    });
+    localStorage.setItem(JOURNAL_KEY, serialized);
+    localStorage.setItem(STORAGE_KEY, serialized);
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
   } catch {
     storageAvailable = false;
     element("storage-warning").hidden = false;
@@ -121,10 +160,10 @@ function currentGoal() {
 }
 
 function showPanel(name, shouldFocus = true) {
+  activePanel = name;
   for (const panelName of panelNames) {
     element(`${panelName}-panel`).hidden = panelName !== name;
   }
-
   const activeIndex = stepIndexes[name];
   document.querySelectorAll(".stepper li").forEach((step, index) => {
     step.classList.toggle("is-active", index === activeIndex);
@@ -135,7 +174,6 @@ function showPanel(name, shouldFocus = true) {
       step.removeAttribute("aria-current");
     }
   });
-
   if (shouldFocus) {
     const heading = element(`${name}-title`);
     heading.focus({ preventScroll: true });
@@ -162,25 +200,20 @@ function showErrors(form, summaryId, errors, targetOverrides = {}) {
   clearErrors(form, summaryId);
   const summary = element(summaryId);
   const list = summary.querySelector("ul");
-
   for (const [field, message] of Object.entries(errors)) {
     const targetId = targetOverrides[field] ?? fieldTargets[field] ?? field;
     const target = element(targetId) ?? form.querySelector(`[name="${field}"]`);
-    if (target) {
-      target.setAttribute("aria-invalid", "true");
-    }
+    target?.setAttribute("aria-invalid", "true");
     const messageElement = element(`${targetId}-error`) ?? element(`${field}-error`);
     if (messageElement) {
       messageElement.textContent = message;
     }
-
     const item = makeElement("li");
     const link = makeElement("a", "", message);
-    link.href = `#${targetId}`;
+    link.href = target ? `#${target.id}` : `#${summaryId}`;
     item.append(link);
     list.append(item);
   }
-
   summary.hidden = false;
   summary.focus();
 }
@@ -191,33 +224,105 @@ function formObject(form) {
 
 function renderMetrics() {
   const metrics = computeMetrics(state);
-  element("metric-rate").textContent = `${metrics.firstEvidencePercent}%`;
-  element("metric-ratio").textContent = `${metrics.outcomesRecorded} ${metrics.outcomesRecorded === 1 ? "outcome" : "outcomes"} / ${metrics.goalsCreated} ${metrics.goalsCreated === 1 ? "goal" : "goals"}`;
-  element("metric-goals").textContent = String(metrics.goalsCreated);
-  element("metric-outcomes").textContent = String(metrics.outcomesRecorded);
+  element("metric-rate").textContent = `${metrics.criterionLinkedEvidencePercent}%`;
+  const receiptWord = metrics.evidenceBearingReceipts === 1 ? "receipt" : "receipts";
+  const sprintWord = metrics.sprintsStarted === 1 ? "sprint" : "sprints";
+  element("metric-ratio").textContent = `${metrics.evidenceBearingReceipts} evidence-bearing ${receiptWord} / ${metrics.sprintsStarted} ${sprintWord} started`;
+  element("metric-sprints").textContent = String(metrics.sprintsStarted);
+  element("metric-evidence").textContent = String(metrics.evidenceBearingReceipts);
 }
 
-function setReviewValues(goal) {
-  element("mission").value = goal.currentPlan.mission;
-  element("successCriterion").value = goal.currentPlan.successCriterion;
-  element("stopCondition").value = goal.currentPlan.stopCondition;
+function readIntakeForm() {
+  return formObject(element("intake-form"));
+}
 
+function populateIntake(draft = state.draft) {
+  const intake = draft?.intake;
+  element("goal").value = intake?.goal ?? "";
+  element("obstacle").value = intake?.obstacle ?? "";
+  document.querySelectorAll("[name='proofPattern']").forEach((control) => {
+    control.checked = control.value === intake?.proofPattern;
+  });
+  element("draft-status").textContent = draft
+    ? `Draft saved ${formatDate(draft.updatedAt)}.`
+    : "Draft not saved yet.";
+}
+
+function autosaveIntake() {
+  const now = nowIso();
+  state = saveDraft(state, readIntakeForm(), {
+    id: state.draft?.id ?? createId("draft"),
+    now,
+  });
+  persistState();
+  element("draft-status").textContent = `Draft saved ${formatDate(now)}.`;
+}
+
+function reviewInput() {
+  const draft = state.draft;
+  const parsedScope = Number(element("scopeValue").value);
+  const scopeValue = Number.isInteger(parsedScope)
+    ? parsedScope
+    : draft.plan.scope.value;
+  return {
+    mission: element("mission").value,
+    successCriterion: element("successCriterion").value,
+    stopCondition: element("stopCondition").value,
+    scope: { ...draft.plan.scope, value: scopeValue },
+    goal: draft.intake.goal,
+    obstacle: draft.intake.obstacle,
+    proofPattern: draft.intake.proofPattern,
+    why: element("why").value,
+    timeboxMinutes: element("timeboxMinutes").value,
+    baselineConfidence: element("baselineConfidence").value,
+  };
+}
+
+function renderReviewContext(draft) {
   const context = element("review-context");
   context.replaceChildren();
+  const goal = makeElement("p");
+  goal.append(makeElement("strong", "", "Goal: "));
+  goal.append(document.createTextNode(draft.intake.goal));
   const constraint = makeElement("p");
   constraint.append(makeElement("strong", "", "Constraint: "));
-  constraint.append(document.createTextNode(goal.intake.obstacle));
-  const reason = makeElement("p");
-  reason.append(makeElement("strong", "", "Why this matters: "));
-  reason.append(document.createTextNode(goal.intake.why));
-  context.append(constraint, reason);
+  constraint.append(document.createTextNode(draft.intake.obstacle));
+  const pattern = makeElement("p");
+  pattern.append(makeElement("strong", "", "Pattern: "));
+  pattern.append(document.createTextNode(PROOF_PATTERNS[draft.intake.proofPattern].label));
+  context.append(goal, constraint, pattern);
+  if (draft.predecessorId) {
+    const lineage = makeElement("p", "lineage-note", `Linked successor to ${draft.predecessorId} · decision: ${draft.decision.replaceAll("_", " ")}`);
+    context.append(lineage);
+  }
 }
 
-function setSimplifyValues(goal) {
-  element("simplifiedMission").value = goal.currentPlan.mission;
-  element("simplifiedSuccess").value = goal.currentPlan.successCriterion;
-  element("simplifiedStop").value = goal.currentPlan.stopCondition;
-  element("simplifyReason").value = "";
+function updateStartButton() {
+  const minutes = Number(element("timeboxMinutes").value) || 5;
+  element("start-sprint").textContent = `Freeze and start ${formatMinutes(minutes)} sprint`;
+}
+
+function setReviewValues(draft) {
+  renderReviewContext(draft);
+  element("mission").value = draft.plan.mission;
+  element("successCriterion").value = draft.plan.successCriterion;
+  element("stopCondition").value = draft.plan.stopCondition;
+  element("scopeValue").value = String(draft.plan.scope.value);
+  element("scopeValue").min = String(draft.plan.scope.min);
+  element("scope-label").textContent = draft.plan.scope.label;
+  element("scope-hint").textContent = `Minimum ${draft.plan.scope.min} ${draft.plan.scope.unit}; currently ${draft.plan.scope.value}. “Reduce” must lower this number.`;
+  element("timeboxMinutes").value = String(draft.intake.timeboxMinutes);
+  element("why").value = draft.intake.why;
+  element("baselineConfidence").value = String(draft.intake.baselineConfidence);
+  updateStartButton();
+}
+
+function autosaveReview() {
+  if (!state.draft?.plan) {
+    return;
+  }
+  state = updateDraftReview(state, reviewInput(), nowIso());
+  persistState();
 }
 
 function renderProvenance(goal) {
@@ -225,48 +330,41 @@ function renderProvenance(goal) {
   const list = element("provenance-list");
   list.replaceChildren();
   section.hidden = goal.revisions.length === 0;
-
   goal.revisions.forEach((revision, index) => {
     const item = makeElement("li");
-    const heading = makeElement("strong", "", `Simplification ${index + 1} · ${formatDate(revision.recordedAt)}`);
-    const reason = makeElement("div", "", revision.reason);
-    const change = makeElement("div", "", `Changed from “${revision.from.mission}” to “${revision.to.mission}”`);
-    item.append(heading, reason, change);
+    item.append(
+      makeElement("strong", "", `Change ${index + 1} · ${formatDate(revision.recordedAt)}`),
+      makeElement("div", "", revision.reason),
+    );
     list.append(item);
   });
 }
 
-function renderSprint(goal) {
-  element("active-mission").textContent = goal.currentPlan.mission;
-  element("active-success").textContent = goal.currentPlan.successCriterion;
-  element("active-stop").textContent = goal.currentPlan.stopCondition;
-  setSimplifyValues(goal);
-  renderProvenance(goal);
-  element("simplify-details").open = false;
-  renderTimer();
-}
-
 function renderTimer() {
   const goal = currentGoal();
-  if (!goal || goal.status !== "running" || !goal.sprint) {
+  if (!goal || goal.status !== "running") {
+    return;
+  }
+  const timerBlock = element("timer-block");
+  const hidden = state.settings.timerHidden;
+  timerBlock.hidden = hidden;
+  element("toggle-timer").textContent = hidden ? "Show countdown" : "Hide countdown";
+  if (hidden) {
     return;
   }
   const remaining = getRemainingSeconds(goal.sprint.endsAt);
-  const text = formatTimer(remaining);
-  element("sprint-timer").textContent = text;
+  element("sprint-timer").textContent = formatTimer(remaining);
   element("sprint-timer").setAttribute("aria-label", `${remaining} seconds remaining`);
-  element("outcome-timer").textContent = text;
-  const timerBlock = element("sprint-timer").closest(".timer-block");
   timerBlock.classList.toggle("is-expired", remaining === 0);
   element("timer-note").textContent = remaining === 0
-    ? "Time is up. Record completed, attempted, or blocked—each is valid evidence."
-    : "No pause: this deadline keeps running across reloads and closed tabs.";
+    ? "The reference timebox ended. Record completed, attempted, or blocked whenever you are ready."
+    : "The deadline continues across reloads. A late result is still valid evidence.";
 }
 
 function startTimerUpdates() {
   stopTimerUpdates();
   renderTimer();
-  timerInterval = window.setInterval(renderTimer, 500);
+  timerInterval = window.setInterval(renderTimer, 1000);
 }
 
 function stopTimerUpdates() {
@@ -276,6 +374,17 @@ function stopTimerUpdates() {
   }
 }
 
+function renderSprint(goal) {
+  const plan = goal.preregisteredPlan;
+  element("active-mission").textContent = plan.mission;
+  element("active-success").textContent = plan.successCriterion;
+  element("active-stop").textContent = plan.stopCondition;
+  element("active-scope").textContent = `${plan.scope.label}: ${plan.scope.value} ${plan.scope.unit}`;
+  element("frozen-at").textContent = formatDate(goal.sprint.startedAt);
+  renderProvenance(goal);
+  renderTimer();
+}
+
 function appendDefinition(list, term, value) {
   const wrapper = makeElement("div");
   wrapper.append(makeElement("dt", "", term), makeElement("dd", "", value));
@@ -283,6 +392,7 @@ function appendDefinition(list, term, value) {
 }
 
 function renderReceipt(goal) {
+  receiptGoalId = goal.id;
   const receipt = element("receipt");
   receipt.replaceChildren();
 
@@ -292,32 +402,33 @@ function renderReceipt(goal) {
   header.append(badge, date);
 
   const title = makeElement("h3", "", goal.intake.goal);
-  const mission = makeElement("p", "mission-text", goal.currentPlan.mission);
+  const mission = makeElement("p", "mission-text", goal.preregisteredPlan.mission);
 
   const confidence = makeElement("div", "confidence-row");
-  const before = makeElement("div");
-  before.append(
-    makeElement("strong", "", `${goal.intake.baselineConfidence}%`),
-    makeElement("span", "", "Before"),
-  );
-  const after = makeElement("div");
-  after.append(
-    makeElement("strong", "", `${goal.outcome.postConfidence}%`),
-    makeElement("span", "", "After"),
-  );
-  const delta = makeElement("div");
-  delta.append(
-    makeElement("strong", "", formatConfidenceDelta(goal.outcome.confidenceDelta)),
-    makeElement("span", "", "Confidence delta"),
-  );
-  confidence.append(before, after, delta);
+  [
+    [`${goal.intake.baselineConfidence}%`, "Before"],
+    [`${goal.outcome.postConfidence}%`, "After"],
+    [formatConfidenceDelta(goal.outcome.confidenceDelta), "Confidence delta"],
+  ].forEach(([value, label]) => {
+    const item = makeElement("div");
+    item.append(makeElement("strong", "", value), makeElement("span", "", label));
+    confidence.append(item);
+  });
 
   const details = makeElement("dl");
-  appendDefinition(details, "Observable success", goal.currentPlan.successCriterion);
-  appendDefinition(details, "Evidence note", goal.outcome.note || "No note recorded.");
+  appendDefinition(details, "Frozen criterion", goal.preregisteredPlan.successCriterion);
+  appendDefinition(details, "Criterion verdict", goal.outcome.criterionVerdict.replaceAll("_", " "));
+  appendDefinition(details, "Self-recorded observation", goal.outcome.observation);
+  appendDefinition(details, "Verification boundary", "Not independently verified");
+  const actionLabel = goal.outcome.actionKind === "taken" ? "Action taken" : "Could not start";
+  appendDefinition(
+    details,
+    actionLabel,
+    `${formatDate(goal.sprint.action.recordedAt)} · ${goal.sprint.action.elapsedSeconds} seconds after sprint start`,
+  );
   if (goal.outcome.url) {
     const wrapper = makeElement("div");
-    wrapper.append(makeElement("dt", "", "Evidence URL"));
+    wrapper.append(makeElement("dt", "", "Supporting URL (not verified)"));
     const description = makeElement("dd");
     const link = makeElement("a", "", goal.outcome.url);
     link.href = goal.outcome.url;
@@ -327,13 +438,47 @@ function renderReceipt(goal) {
     wrapper.append(description);
     details.append(wrapper);
   }
-  appendDefinition(details, "Original mission", goal.originalPlan.mission);
-  appendDefinition(details, "Simplifications", String(goal.revisions.length));
-
+  appendDefinition(details, "Original compiled mission", goal.originalPlan.mission);
+  appendDefinition(details, "Pre-start changes", String(goal.revisions.length));
+  if (goal.predecessorId) {
+    appendDefinition(details, "Linked predecessor", goal.predecessorId);
+  }
   receipt.append(header, title, mission, confidence, details);
-  element("new-goal").textContent = currentGoal()
-    ? "Return to active proof"
-    : "Name another impossible thing";
+  renderDecision(goal);
+}
+
+function setDecisionButton(button, action, text) {
+  button.dataset.action = action;
+  button.textContent = text;
+}
+
+function renderDecision(goal) {
+  const decision = recommendNextDecision(goal);
+  const title = element("decision-title");
+  const copy = element("decision-copy");
+  const primary = element("decision-primary");
+  const secondary = element("decision-secondary");
+  if (decision === "stop") {
+    title.textContent = "Stop: the criterion was observed.";
+    copy.textContent = "Close this loop without inflating the task. Continuing is optional.";
+    setDecisionButton(primary, "stop", "Stop here");
+    setDecisionButton(secondary, "continue", "Create a linked continuation");
+  } else if (decision === "continue") {
+    title.textContent = "Continue only if another signal is useful.";
+    copy.textContent = "The criterion was observed during an attempt. A linked successor preserves this receipt.";
+    setDecisionButton(primary, "continue", "Create a linked continuation");
+    setDecisionButton(secondary, "stop", "Stop here");
+  } else if (decision === "seek_access") {
+    title.textContent = "Seek access; do not blame effort.";
+    copy.textContent = "Create a linked constraint-checking mission, or stop with the blocker intact.";
+    setDecisionButton(primary, "seek_access", "Plan an access-seeking test");
+    setDecisionButton(secondary, "stop", "Stop here");
+  } else {
+    title.textContent = "Revise by shrinking declared scope.";
+    copy.textContent = "Create a linked successor with a smaller numeric scope. This receipt remains unchanged.";
+    setDecisionButton(primary, "revise_shrink", "Create a smaller linked test");
+    setDecisionButton(secondary, "stop", "Stop here");
+  }
 }
 
 function renderHistory() {
@@ -341,29 +486,30 @@ function renderHistory() {
   const empty = element("history-empty");
   list.replaceChildren();
   empty.hidden = state.goals.length !== 0;
-
   [...state.goals].reverse().forEach((goal, reverseIndex) => {
     const item = makeElement("li", "history-card");
     const index = makeElement("span", "history-index", String(state.goals.length - reverseIndex));
     const content = makeElement("div");
     content.append(makeElement("h3", "", goal.intake.goal));
-
     const statusText = goal.outcome
-      ? `${goal.outcome.status} · confidence ${formatConfidenceDelta(goal.outcome.confidenceDelta)}`
-      : goal.status === "running"
-        ? "Proof sprint in progress"
-        : "Mission created; no outcome yet";
+      ? `${goal.outcome.status} · criterion ${goal.outcome.criterionVerdict.replaceAll("_", " ")}`
+      : "Sprint running · criterion preregistered";
     content.append(makeElement("p", "", statusText));
-    content.append(makeElement("p", "", goal.currentPlan.mission));
-
+    content.append(makeElement("p", "", goal.preregisteredPlan.mission));
     const side = makeElement("div", "history-meta");
     side.append(makeElement("span", "", formatDate(goal.createdAt)));
+    const viewButton = makeElement(
+      "button",
+      "button button-secondary",
+      goal.outcome ? "View receipt" : "Resume sprint",
+    );
+    viewButton.type = "button";
     if (goal.outcome) {
-      const viewButton = makeElement("button", "button button-secondary", "View receipt");
-      viewButton.type = "button";
       viewButton.dataset.receiptId = goal.id;
-      side.append(viewButton);
+    } else {
+      viewButton.dataset.resumeId = goal.id;
     }
+    side.append(viewButton);
     item.append(index, content, side);
     list.append(item);
   });
@@ -374,126 +520,117 @@ function renderAll() {
   renderHistory();
 }
 
-function restoreFlow() {
+function restoreFlow(shouldFocus = false) {
   const goal = currentGoal();
-  if (goal?.status === "planned") {
-    setReviewValues(goal);
-    showPanel("review", false);
-    return;
-  }
   if (goal?.status === "running") {
     renderSprint(goal);
     startTimerUpdates();
-    showPanel("sprint", false);
+    showPanel("sprint", shouldFocus);
     return;
   }
-  if (state.activeGoalId !== null) {
-    state = { ...state, activeGoalId: null };
-    persistState();
+  stopTimerUpdates();
+  if (state.draft?.stage === "review" && state.draft.plan) {
+    setReviewValues(state.draft);
+    showPanel("review", shouldFocus);
+    return;
   }
-  showPanel("intake", false);
+  populateIntake(state.draft);
+  showPanel("intake", shouldFocus);
 }
 
 function handleIntakeSubmit(event) {
   event.preventDefault();
   const form = event.currentTarget;
-  const result = validateIntake(formObject(form));
+  const input = readIntakeForm();
+  const result = validateIntake(input);
   clearErrors(form, "intake-errors");
   if (!result.valid) {
     showErrors(form, "intake-errors", result.errors);
     return;
   }
-
-  state = createGoal(state, result.value, { id: createId(), now: nowIso() });
+  state = compileDraft(state, input, {
+    id: state.draft?.id ?? createId("draft"),
+    now: nowIso(),
+  });
   persistState();
-  renderAll();
-  const goal = currentGoal();
-  setReviewValues(goal);
+  setReviewValues(state.draft);
   showPanel("review");
-  announce("Proof mission created. Review it before starting the timer.");
+  announce("Experiment compiled. Review it before preregistering.");
+}
+
+function syncTimeboxText() {
+  const minutes = Number(element("timeboxMinutes").value);
+  const replacement = `after ${formatMinutes(minutes)}`;
+  const stop = element("stopCondition");
+  if (/after \d+ minutes?/i.test(stop.value)) {
+    stop.value = stop.value.replace(/after \d+ minutes?/i, replacement);
+  }
+  updateStartButton();
+  autosaveReview();
+}
+
+function handleShrinkDraft() {
+  autosaveReview();
+  const result = validatePlan(state.draft.plan);
+  if (!result.valid) {
+    showErrors(element("review-form"), "review-errors", result.errors);
+    return;
+  }
+  try {
+    state = shrinkDraft(state, nowIso());
+    persistState();
+    setReviewValues(state.draft);
+    announce(`Declared ${state.draft.plan.scope.label.toLowerCase()} reduced to ${state.draft.plan.scope.value}.`);
+  } catch (error) {
+    showErrors(element("review-form"), "review-errors", { scope: error.message });
+  }
 }
 
 function handleReviewSubmit(event) {
   event.preventDefault();
   const form = event.currentTarget;
-  const result = validatePlan(formObject(form));
+  autosaveReview();
+  const intakeResult = validateIntake(state.draft.intake);
+  const planResult = validatePlan(state.draft.plan);
+  const errors = { ...intakeResult.errors, ...planResult.errors };
   clearErrors(form, "review-errors");
-  if (!result.valid) {
-    showErrors(form, "review-errors", result.errors);
+  if (Object.keys(errors).length > 0) {
+    showErrors(form, "review-errors", errors);
     return;
   }
-
-  const goal = currentGoal();
-  state = startSprint(state, goal.id, result.value, Date.now());
+  const startedAt = nowIso();
+  state = startSprint(state, {
+    id: createId("sprint"),
+    now: startedAt,
+    nowMilliseconds: Date.parse(startedAt),
+  });
   persistState();
   renderAll();
   renderSprint(currentGoal());
   startTimerUpdates();
   showPanel("sprint");
-  announce("Proof sprint started. The wall-clock timer cannot pause.");
+  announce("Mission and criterion preregistered. The optional wall-clock reference has started.");
 }
 
-function handleSuggestion() {
-  const plan = {
-    mission: element("simplifiedMission").value,
-    successCriterion: element("simplifiedSuccess").value,
-    stopCondition: element("simplifiedStop").value,
+function backToIntake() {
+  autosaveReview();
+  state = {
+    ...state,
+    draft: { ...state.draft, stage: "intake", updatedAt: nowIso() },
   };
-  const result = validatePlan(plan);
-  if (!result.valid) {
-    showErrors(element("simplify-form"), "simplify-errors", result.errors, {
-      mission: "simplifiedMission",
-      successCriterion: "simplifiedSuccess",
-      stopCondition: "simplifiedStop",
-    });
-    return;
-  }
-  const suggestion = suggestSimplerPlan(result.value);
-  element("simplifiedMission").value = suggestion.mission;
-  element("simplifiedSuccess").value = suggestion.successCriterion;
-  announce("A smaller slice was suggested. Edit it if needed.");
-}
-
-function handleSimplifySubmit(event) {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const input = formObject(form);
-  const result = validatePlan(input);
-  const errors = { ...result.errors };
-  if (!input.reason || input.reason.trim().length < 3) {
-    errors.reason = "Say briefly why the mission needed to get smaller.";
-  }
-  clearErrors(form, "simplify-errors");
-  if (Object.keys(errors).length > 0) {
-    showErrors(form, "simplify-errors", errors, {
-      mission: "simplifiedMission",
-      successCriterion: "simplifiedSuccess",
-      stopCondition: "simplifiedStop",
-      reason: "simplifyReason",
-    });
-    return;
-  }
-
-  try {
-    state = simplifyMission(state, currentGoal().id, result.value, input.reason, nowIso());
-  } catch (error) {
-    showErrors(form, "simplify-errors", { mission: error.message }, {
-      mission: "simplifiedMission",
-    });
-    return;
-  }
   persistState();
-  renderAll();
-  renderSprint(currentGoal());
-  announce("Mission simplified. The original and deadline were preserved.");
+  populateIntake(state.draft);
+  showPanel("intake");
+  announce("Back at the two-input draft. Nothing entered history.");
 }
 
 function openOutcomePanel() {
   const goal = currentGoal();
+  stopTimerUpdates();
+  element("outcome-criterion").textContent = goal.preregisteredPlan.successCriterion;
   element("postConfidence").value = String(goal.intake.baselineConfidence);
   showPanel("outcome");
-  renderTimer();
-  announce("Evidence receipt opened. The timer is still running.");
+  announce("Receipt opened. Countdown updates are frozen while you record.");
 }
 
 function handleOutcomeSubmit(event) {
@@ -505,7 +642,6 @@ function handleOutcomeSubmit(event) {
     showErrors(form, "outcome-errors", result.errors);
     return;
   }
-
   const goalId = currentGoal().id;
   state = recordOutcome(state, goalId, result.value, nowIso());
   persistState();
@@ -514,34 +650,44 @@ function handleOutcomeSubmit(event) {
   const goal = findGoal(state, goalId);
   renderReceipt(goal);
   showPanel("receipt");
-  announce(`${goal.outcome.status} outcome recorded. Confidence delta ${formatConfidenceDelta(goal.outcome.confidenceDelta)}.`);
+  announce(`${goal.outcome.status} recorded; criterion ${goal.outcome.criterionVerdict.replaceAll("_", " ")}.`);
   form.reset();
 }
 
-function startAnotherGoal() {
-  element("intake-form").reset();
-  element("baselineConfidence").value = "30";
-  element("timeboxMinutes").value = "5";
-  showPanel("intake");
-  announce("Ready for another proof mission.");
+function backToSprint() {
+  renderSprint(currentGoal());
+  startTimerUpdates();
+  showPanel("sprint");
+  announce("Returned to the frozen mission. No receipt was saved.");
 }
 
-function handleReceiptPrimaryAction() {
-  const goal = currentGoal();
-  if (goal?.status === "planned") {
-    setReviewValues(goal);
-    showPanel("review");
-    announce("Returned to your planned proof mission.");
-    return;
+function startFresh() {
+  receiptGoalId = null;
+  element("intake-form").reset();
+  populateIntake(null);
+  showPanel("intake");
+  announce("Ready for another two-input experiment.");
+}
+
+function createSuccessor(decision) {
+  const source = findGoal(state, receiptGoalId);
+  state = createLinkedDraft(state, source.id, decision, {
+    id: createId("draft"),
+    now: nowIso(),
+  });
+  persistState();
+  setReviewValues(state.draft);
+  showPanel("review");
+  announce("Linked successor created. The original receipt remains unchanged.");
+}
+
+function handleDecision(event) {
+  const action = event.currentTarget.dataset.action;
+  if (action === "stop") {
+    startFresh();
+  } else {
+    createSuccessor(action);
   }
-  if (goal?.status === "running") {
-    renderSprint(goal);
-    startTimerUpdates();
-    showPanel("sprint");
-    announce("Returned to your active proof sprint. The timer never paused.");
-    return;
-  }
-  startAnotherGoal();
 }
 
 function openReceiptFromHistory(goalId) {
@@ -553,23 +699,96 @@ function openReceiptFromHistory(goalId) {
   showPanel("receipt");
 }
 
-function openClearDialog() {
-  const dialog = element("clear-dialog");
+function resumeSprint(goalId) {
+  const goal = findGoal(state, goalId);
+  if (!goal || goal.status !== "running") {
+    return;
+  }
+  state = { ...state, activeGoalId: goal.id };
+  persistState();
+  renderSprint(goal);
+  startTimerUpdates();
+  showPanel("sprint");
+}
+
+function openDialog(id) {
+  const dialog = element(id);
   if (typeof dialog.showModal === "function") {
     dialog.showModal();
+  }
+}
+
+function confirmDiscardDraft() {
+  state = discardDraft(state);
+  persistState();
+  element("discard-dialog").close();
+  element("intake-form").reset();
+  populateIntake(null);
+  showPanel("intake");
+  announce("Uncommitted draft discarded. Sprint history was preserved.");
+}
+
+function exportData() {
+  try {
+    const serialized = createExport(state, nowIso());
+    const blob = new Blob([serialized], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `proof-of-possible-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    element("import-status").textContent = "Export created. It contains readable private data.";
+    announce("Workspace exported as JSON.");
+  } catch {
+    element("import-status").textContent = "Export failed; no local data changed.";
+  }
+}
+
+async function importData(event) {
+  const [file] = event.currentTarget.files;
+  if (!file) {
+    return;
+  }
+  try {
+    const imported = parseImport(await file.text());
+    state = mergeStates(state, imported);
+    persistState();
+    renderAll();
+    restoreFlow(false);
+    element("import-status").textContent = "Validated import merged successfully. Existing receipts were preserved.";
+    announce("Validated workspace imported.");
+  } catch (error) {
+    element("import-status").textContent = `Import rejected: ${error.message} No local data changed.`;
+    announce("Import rejected without changing local data.");
+  } finally {
+    event.currentTarget.value = "";
   }
 }
 
 function clearLocalData() {
   stopTimerUpdates();
   state = createEmptyState();
+  storageRevision = 0;
   if (storageAvailable) {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(JOURNAL_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
   }
   element("clear-dialog").close();
+  element("intake-form").reset();
   renderAll();
-  startAnotherGoal();
-  announce("All Proof of Possible data was removed from this browser.");
+  populateIntake(null);
+  showPanel("intake");
+  element("import-status").textContent = "Local workspace and recovery journal deleted.";
+  announce("All Proof of Possible data was deleted from this browser profile.");
+}
+
+function toggleTimer() {
+  state = setTimerHidden(state, !state.settings.timerHidden, nowIso());
+  persistState();
+  renderTimer();
+  announce(state.settings.timerHidden ? "Countdown hidden." : "Countdown shown.");
 }
 
 function renderTimeline(data) {
@@ -597,46 +816,98 @@ async function loadTimeline() {
     }
     renderTimeline(await response.json());
   } catch {
-    const timeline = element("evolution-timeline");
-    timeline.replaceChildren(makeElement(
+    element("evolution-timeline").replaceChildren(makeElement(
       "li",
       "timeline-loading",
-      "Evolution data is unavailable. Frame 1 evidence remains linked below.",
+      "Evolution data is unavailable. Frame evidence remains available from the footer.",
     ));
   }
 }
 
+function handleStorageEvent(event) {
+  if (event.key !== STORAGE_KEY) {
+    return;
+  }
+  if (!event.newValue) {
+    stopTimerUpdates();
+    state = createEmptyState();
+    storageRevision = 0;
+    renderAll();
+    restoreFlow(false);
+    announce("Workspace deletion from another tab was applied here.");
+    return;
+  }
+  try {
+    const incoming = deserializeWorkspace(event.newValue);
+    if (incoming.writerId === writerId || incoming.revision < storageRevision) {
+      return;
+    }
+    state = mergeStates(state, incoming.state);
+    storageRevision = incoming.revision;
+    renderAll();
+    if (activePanel === "intake" || activePanel === "review" || activePanel === "sprint") {
+      restoreFlow(false);
+    }
+    announce("Workspace merged with a newer revision from another tab.");
+  } catch {
+    announce("Ignored an invalid workspace update from another tab.");
+  }
+}
+
 function bindEvents() {
-  element("intake-form").addEventListener("submit", handleIntakeSubmit);
-  element("review-form").addEventListener("submit", handleReviewSubmit);
-  element("suggest-smaller").addEventListener("click", handleSuggestion);
-  element("simplify-form").addEventListener("submit", handleSimplifySubmit);
+  const intakeForm = element("intake-form");
+  intakeForm.addEventListener("submit", handleIntakeSubmit);
+  intakeForm.addEventListener("input", autosaveIntake);
+  intakeForm.addEventListener("change", autosaveIntake);
+
+  const reviewForm = element("review-form");
+  reviewForm.addEventListener("submit", handleReviewSubmit);
+  reviewForm.addEventListener("input", autosaveReview);
+  element("timeboxMinutes").addEventListener("change", syncTimeboxText);
+  element("shrink-draft").addEventListener("click", handleShrinkDraft);
+  element("back-to-intake").addEventListener("click", backToIntake);
+  element("discard-draft").addEventListener("click", () => openDialog("discard-dialog"));
+  element("cancel-discard").addEventListener("click", () => element("discard-dialog").close());
+  element("confirm-discard").addEventListener("click", confirmDiscardDraft);
+
+  element("toggle-timer").addEventListener("click", toggleTimer);
   element("open-outcome").addEventListener("click", openOutcomePanel);
-  element("back-to-sprint").addEventListener("click", () => {
-    renderSprint(currentGoal());
-    showPanel("sprint");
-    announce("Returned to the proof sprint. The timer never paused.");
-  });
+  element("back-to-sprint").addEventListener("click", backToSprint);
   element("outcome-form").addEventListener("submit", handleOutcomeSubmit);
-  element("new-goal").addEventListener("click", handleReceiptPrimaryAction);
+  element("action-could-not-start").addEventListener("change", () => {
+    element("outcome-form").elements.status.value = "blocked";
+    element("outcome-form").elements.criterionVerdict.value = "blocked";
+  });
+  element("decision-primary").addEventListener("click", handleDecision);
+  element("decision-secondary").addEventListener("click", handleDecision);
+
   element("history-list").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-receipt-id]");
-    if (button) {
-      openReceiptFromHistory(button.dataset.receiptId);
+    const receiptButton = event.target.closest("[data-receipt-id]");
+    const resumeButton = event.target.closest("[data-resume-id]");
+    if (receiptButton) {
+      openReceiptFromHistory(receiptButton.dataset.receiptId);
+    } else if (resumeButton) {
+      resumeSprint(resumeButton.dataset.resumeId);
     }
   });
-  element("clear-data").addEventListener("click", openClearDialog);
+
+  element("export-data").addEventListener("click", exportData);
+  element("import-data").addEventListener("click", () => element("import-file").click());
+  element("import-file").addEventListener("change", importData);
+  element("clear-data").addEventListener("click", () => openDialog("clear-dialog"));
   element("cancel-clear").addEventListener("click", () => element("clear-dialog").close());
   element("confirm-clear").addEventListener("click", clearLocalData);
+
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
+    if (!document.hidden && activePanel === "sprint") {
       renderTimer();
     }
   });
+  window.addEventListener("storage", handleStorageEvent);
 }
 
 loadState();
 bindEvents();
 renderAll();
-restoreFlow();
+restoreFlow(false);
 loadTimeline();

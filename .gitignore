@@ -1,2 +1,8 @@
 _site/
 .DS_Store
+node_modules/
+.npm-cache/
+.playwright-browsers/
+.runtime-tmp/
+test-results/
+playwright-report/

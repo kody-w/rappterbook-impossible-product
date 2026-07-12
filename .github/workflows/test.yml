@@ -12,6 +12,9 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
+      TMPDIR: ${{ github.workspace }}/.runtime-tmp
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -19,13 +22,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+      - name: Install locked test dependencies
+        run: |
+          mkdir -p "$TMPDIR"
+          npm ci
       - name: Check JavaScript syntax
         run: |
-          node --check src/core.mjs
-          node --check src/app.mjs
-          node --check scripts/build.mjs
-          node --check scripts/check-static.mjs
-      - name: Run automated tests
-        run: node --test tests/*.test.mjs
-      - name: Check static deployment invariants
-        run: node scripts/check-static.mjs
+          npm run check
+          node --check playwright.config.mjs
+          node --check tests/release.spec.mjs
+      - name: Run unit and static release tests
+        run: npm test
+      - name: Install locked Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run browser release contract
+        run: npm run test:e2e

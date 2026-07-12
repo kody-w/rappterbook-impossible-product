@@ -407,6 +407,15 @@ legend {
   font-weight: 760;
 }
 
+legend {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding-inline: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
 fieldset {
   min-width: 0;
   max-width: 100%;

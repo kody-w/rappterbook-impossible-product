@@ -22,7 +22,7 @@
     <p class="privacy-chip"><span aria-hidden="true">●</span> This browser profile</p>
   </header>
 
-  <main id="main-content">
+  <main id="main-content" tabindex="-1">
     <section class="hero" aria-labelledby="hero-title">
       <p class="eyebrow">One honest test. Not a motivational speech.</p>
       <h1 id="hero-title">Turn “impossible” into evidence.</h1>
@@ -40,7 +40,10 @@
       Browser storage is unavailable. This tab can still run, but drafts and receipts may not survive a reload.
     </div>
     <div id="recovery-warning" class="notice" role="status" hidden>
-      The main workspace copy was unreadable. A validated journal copy was recovered without overwriting it.
+      A validated recovery copy was loaded.
+    </div>
+    <div id="reset-warning" class="notice error-notice" role="alert" hidden>
+      Saved workspace copies could not be validated. An empty workspace was opened.
     </div>
     <div id="migration-notice" class="notice" role="status" hidden>
       Your Frame 1 workspace was safely upgraded to the Frame 2 format.
@@ -413,6 +416,7 @@
 
   <footer>
     <p>Proof of Possible · v2.0.0 · Frame 2</p>
+    <p id="release-provenance">Loading deployed release provenance…</p>
     <a href="./evolution/frames/frame-02.json">View Frame 2 evolution evidence</a>
   </footer>
 

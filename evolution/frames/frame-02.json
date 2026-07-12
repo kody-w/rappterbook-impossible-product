@@ -171,9 +171,9 @@
         "evidence": "compiler matrix and one-minute unit tests"
       },
       {
-        "criterion": "Simplification strictly lowers a declared numeric scope variable.",
+        "criterion": "Simplification strictly lowers the declared numeric scope for every proof pattern, rewrites the original claim, and uses grammatical singular/plural copy.",
         "status": "passed",
-        "evidence": "scope-reduction unit test"
+        "evidence": "compiler matrix plus direct scope-reduction button assertions across ask, make, check, and send"
       }
     ],
     "criterion-linked-evidence": [
@@ -193,9 +193,9 @@
         "evidence": "domain and DOM receipt assertions"
       },
       {
-        "criterion": "Metric always shows evidence-bearing receipts / sprints started.",
+        "criterion": "Metric always recomputes evidence-bearing receipts / sprints started from the observation instead of trusting imported derived fields.",
         "status": "passed",
-        "evidence": "metric unit and browser assertions"
+        "evidence": "metric unit tests and derived-field spoof browser import"
       }
     ],
     "recoverable-local-workspace": [
@@ -205,9 +205,9 @@
         "evidence": "browser draft recovery and domain denominator tests"
       },
       {
-        "criterion": "Malformed import fails without data loss.",
+        "criterion": "Malformed or semantically contradictory import fails without data loss or an uncaught browser error.",
         "status": "passed",
-        "evidence": "browser malformed-import assertion"
+        "evidence": "browser malformed/contradictory import assertions with automatic pageerror and console-error guards"
       },
       {
         "criterion": "Export, clear, and import restores the workspace; delete removes both primary and journal.",
@@ -215,21 +215,26 @@
         "evidence": "browser round-trip release contract"
       },
       {
-        "criterion": "One corrupt primary payload and stale tab state cannot erase a committed receipt or deadline.",
+        "criterion": "The newest semantically valid revision wins; corrupt primary recovery and double-corruption reset are reported truthfully.",
         "status": "passed",
-        "evidence": "journal recovery and additive merge unit tests"
+        "evidence": "revision-selection, invalid-newer-copy, double-corruption, journal recovery, and additive merge tests"
       }
     ],
     "release": [
       {
-        "criterion": "Real Chromium journey, reload, keyboard, 320px overflow, and request-origin tests block Test and Pages workflows.",
+        "criterion": "Real Chromium journeys cover reload, both decision buttons, every simplification button path, skip-link focus, imports, and every populated panel at 320px with 200% text.",
         "status": "passed",
-        "evidence": "tests/release.spec.mjs and both workflow definitions"
+        "evidence": "eight built-artifact browser tests with automatic pageerror, console-error, request-origin, and element-overflow guards"
       },
       {
         "criterion": "Static third-party checks include HTML, runtime JavaScript, and CSS.",
         "status": "passed",
         "evidence": "scripts/check-static.mjs"
+      },
+      {
+        "criterion": "Pages deploys the exact _site artifact exercised by Chromium and publishes non-self-referential build provenance.",
+        "status": "passed",
+        "evidence": "single-build Pages workflow, deployment artifact test, and generated /provenance.json with SHA, run, timestamp, git tree, per-file hashes, and aggregate content digest"
       }
     ]
   },
@@ -254,38 +259,38 @@
   "tests": {
     "unitAndStaticCommand": "npm test",
     "browserCommand": "npm run test:e2e",
-    "status": "passed",
-    "unitPassed": 25,
-    "browserPassed": 3,
+    "status": "passed locally; both commands are mandatory deployment gates",
+    "unitPassed": 31,
+    "browserPassed": 8,
     "failed": 0,
-    "recordedAt": "2026-07-12T02:49:15Z"
+    "recordedAt": "2026-07-12T03:22:15Z",
+    "artifactUnderTest": "_site"
   },
   "release": {
     "baselineCommitSha": "64e9b9f2a6e01ae810fc2d43e9fe95f7bb3f9d63",
-    "implementationCommitSha": "1a370c15935fafc10c2f19d447ac69a96d1514c8",
-    "firstVerifiedDeploymentCommitSha": "c5c6a44167adec1fe0015e7a6729036a915c5304",
     "deployedUrl": "https://kody-w.github.io/rappterbook-impossible-product/",
-    "deploymentStatus": "verified",
     "pagesWorkflow": ".github/workflows/pages.yml",
     "testWorkflow": ".github/workflows/test.yml",
-    "pagesWorkflowRunUrl": "https://github.com/kody-w/rappterbook-impossible-product/actions/runs/29177349427",
-    "testWorkflowRunUrl": "https://github.com/kody-w/rappterbook-impossible-product/actions/runs/29177349435",
-    "verifiedAt": "2026-07-12T02:53:14Z",
-    "verification": {
-      "httpStatus": 200,
-      "contentHashMatches": 6,
-      "jsonFilesParsed": 7,
-      "conflictMarkers": 0
+    "currentDeploymentSourceOfTruth": "/provenance.json",
+    "provenancePolicy": "The build emits the deployed GITHUB_SHA, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT, build timestamp, git tree SHA, and deterministic content digest. This frame file intentionally does not self-claim a mutable current commit or run.",
+    "rejectedRelease": {
+      "commitSha": "5eea951458b326bce08d28f137ce201618ecddf7",
+      "status": "rejected by independent verification",
+      "historicalPagesWorkflowRunUrl": "https://github.com/kody-w/rappterbook-impossible-product/actions/runs/29177349427",
+      "historicalTestWorkflowRunUrl": "https://github.com/kody-w/rappterbook-impossible-product/actions/runs/29177349435"
     },
-    "workflowWarnings": [
-      "GitHub forced actions/checkout@v4 and actions/setup-node@v4 from deprecated Node 20 to Node 24.",
-      "actions/deploy-pages@v4 emitted its upstream punycode deprecation warning."
-    ]
+    "completionRelease": {
+      "scope": "Frame 2 completion repair only",
+      "selectedMutationCount": 3,
+      "strategyEvidenceFileCount": 8,
+      "nextFrameStarted": false,
+      "productMutationAdded": false
+    }
   },
   "timestamps": {
     "frameStartedAt": "2026-07-12T02:27:20.574Z",
     "strategyEvidenceCapturedAt": "2026-07-12T02:35:00.000Z",
-    "implementationCompletedAt": "2026-07-12T02:49:15Z",
-    "releaseVerifiedAt": "2026-07-12T02:53:14Z"
+    "initialImplementationCompletedAt": "2026-07-12T02:49:15Z",
+    "completionRepairValidatedLocallyAt": "2026-07-12T03:22:15Z"
   }
 }

@@ -29,6 +29,7 @@ html {
 }
 
 body {
+  min-width: 0;
   margin: 0;
   background: var(--paper);
   color: var(--ink);
@@ -63,7 +64,9 @@ select {
 
 a {
   color: var(--brand-dark);
+  overflow-wrap: anywhere;
   text-underline-offset: 0.2em;
+  word-break: break-word;
 }
 
 img {
@@ -85,6 +88,7 @@ img {
   top: 0.5rem;
   left: 0.5rem;
   z-index: 20;
+  max-width: calc(100vw - 1rem);
   padding: 0.7rem 1rem;
   background: var(--ink);
   color: #fff;
@@ -118,12 +122,19 @@ img {
 
 .brand {
   display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
   gap: 0.65rem;
   align-items: center;
   color: var(--ink);
   font-size: 1.05rem;
   font-weight: 780;
   text-decoration: none;
+}
+
+.brand span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .privacy-chip {
@@ -142,6 +153,7 @@ img {
 
 main,
 footer {
+  min-width: 0;
   width: min(100% - 2rem, 76rem);
   margin-inline: auto;
 }
@@ -163,7 +175,9 @@ footer {
 h1,
 h2,
 h3,
-p {
+p,
+dd,
+li {
   overflow-wrap: anywhere;
 }
 
@@ -289,6 +303,7 @@ h3 {
 }
 
 .workspace {
+  min-width: 0;
   margin: 2rem 0;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -308,6 +323,7 @@ h3 {
 
 .stepper li {
   display: flex;
+  min-width: 0;
   gap: 0.5rem;
   align-items: center;
   min-height: 3.6rem;
@@ -349,6 +365,8 @@ h3 {
 }
 
 .flow-panel {
+  width: 100%;
+  min-width: 0;
   max-width: 56rem;
   padding: clamp(1.4rem, 5vw, 4rem);
   margin: 0 auto;
@@ -366,6 +384,7 @@ h3 {
 
 form {
   display: grid;
+  min-width: 0;
   grid-template-columns: minmax(0, 1fr);
   gap: 1.3rem;
 }
@@ -378,6 +397,7 @@ form {
 
 .field-row {
   display: grid;
+  min-width: 0;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
@@ -385,6 +405,12 @@ form {
 label,
 legend {
   font-weight: 760;
+}
+
+fieldset {
+  min-width: 0;
+  max-width: 100%;
+  margin-inline: 0;
 }
 
 .field-hint {
@@ -487,7 +513,9 @@ textarea:hover {
   border: 2px solid transparent;
   border-radius: 10px;
   font-weight: 760;
+  overflow-wrap: anywhere;
   text-decoration: none;
+  white-space: normal;
 }
 
 .button:hover {
@@ -540,6 +568,11 @@ textarea:hover {
   align-items: center;
 }
 
+.action-row > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .inline-note {
   color: var(--muted);
   font-size: 0.86rem;
@@ -569,6 +602,7 @@ textarea:hover {
 }
 
 .timer-block {
+  min-width: 0;
   padding: 2rem;
   margin-bottom: 1.4rem;
   border-radius: 16px;
@@ -590,7 +624,7 @@ textarea:hover {
   display: block;
   margin: 0.25rem 0;
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-  font-size: clamp(4rem, 12vw, 7rem);
+  font-size: clamp(1.75rem, 18vw, 7rem);
   font-variant-numeric: tabular-nums;
   font-weight: 760;
   letter-spacing: -0.08em;
@@ -613,6 +647,8 @@ textarea:hover {
 
 .mission-card,
 .receipt {
+  min-width: 0;
+  max-width: 100%;
   padding: clamp(1.2rem, 4vw, 2rem);
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -653,6 +689,7 @@ textarea:hover {
 
 dl {
   display: grid;
+  min-width: 0;
   gap: 0.9rem;
   margin: 1.4rem 0 0;
 }
@@ -666,6 +703,7 @@ dt {
 }
 
 dd {
+  min-width: 0;
   margin: 0.15rem 0 0;
 }
 
@@ -736,7 +774,8 @@ dd {
 .status-options label,
 .proof-options label {
   display: grid;
-  grid-template-columns: auto 1fr;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 0.8rem;
   align-items: start;
   padding: 0.9rem;
@@ -890,6 +929,7 @@ dd {
 
 .history-card {
   display: grid;
+  min-width: 0;
   grid-template-columns: auto 1fr auto;
   gap: 0.9rem 1rem;
   align-items: start;
@@ -922,6 +962,7 @@ dd {
 }
 
 .history-meta {
+  min-width: 0;
   color: var(--muted);
   font-size: 0.76rem;
   text-align: right;
@@ -958,6 +999,7 @@ dd {
 }
 
 .timeline > li {
+  min-width: 0;
   min-height: 9rem;
   padding: 1rem;
   border: 1px solid var(--line);
@@ -1011,6 +1053,7 @@ dd {
 
 footer {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   justify-content: space-between;
   padding: 2rem 0 3rem;
@@ -1099,13 +1142,16 @@ dialog h2 {
   }
 
   .site-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
     align-items: start;
   }
 
   .privacy-chip {
-    max-width: 8rem;
-    justify-content: end;
-    text-align: right;
+    max-width: 100%;
+    justify-content: start;
+    text-align: left;
   }
 
   h1 {
@@ -1113,7 +1159,7 @@ dialog h2 {
   }
 
   .flow-panel {
-    padding: 1.2rem;
+    padding: clamp(0.75rem, 4vw, 1.2rem);
   }
 
   .action-row .button,
@@ -1128,6 +1174,14 @@ dialog h2 {
 
   .timeline > .frame-shipped {
     grid-column: span 1;
+  }
+
+  .history-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .history-meta {
+    grid-column: 1;
   }
 
   footer {

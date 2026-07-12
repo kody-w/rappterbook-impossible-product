@@ -13,6 +13,7 @@ import {
   findGoal,
   formatConfidenceDelta,
   formatMinutes,
+  formatScopeValue,
   generatePlan,
   getRemainingSeconds,
   isEvidenceBearingObservation,
@@ -151,22 +152,48 @@ test("review edits remain draft-only until sprint start", () => {
   assert.match(updated.draft.plan.mission, /^Make/);
 });
 
-test("scope reduction lowers the declared variable instead of prepending prose", () => {
-  const before = reviewedState();
-  const previousPlan = before.draft.plan;
-  const after = shrinkDraft(before, "2026-07-12T01:59:30.000Z");
-  assert.ok(after.draft.plan.scope.value < previousPlan.scope.value);
-  assert.equal(after.draft.plan.scope.key, previousPlan.scope.key);
-  assert.doesNotMatch(after.draft.plan.mission, /Do only the first|smaller slice/i);
-  assert.equal(after.draft.revisions[0].type, "scope_reduction");
-  assert.equal(after.draft.revisions[0].fromValue, 3);
-  assert.equal(after.draft.revisions[0].toValue, 1);
+test("scope reduction is smaller, deterministic, and grammatical for every pattern", () => {
+  const expectedMissions = {
+    ask: /one question of 12 words or fewer/,
+    make: /no more than 1 part that demonstrates/,
+    check: /up to 1 explicit requirement affecting/,
+    send: /one reversible probe of 30 words or fewer/,
+  };
+  for (const proofPattern of Object.keys(PROOF_PATTERNS)) {
+    const before = reviewedState({ ...validIntake, proofPattern });
+    const previousPlan = before.draft.plan;
+    const first = shrinkDraft(before, "2026-07-12T01:59:30.000Z");
+    const second = shrinkDraft(before, "2026-07-12T01:59:30.000Z");
+    assert.deepEqual(first, second);
+    assert.ok(first.draft.plan.scope.value < previousPlan.scope.value);
+    assert.equal(first.draft.plan.scope.key, previousPlan.scope.key);
+    assert.match(first.draft.plan.mission, expectedMissions[proofPattern]);
+    assert.doesNotMatch(first.draft.plan.mission, /\b1 (?:parts|requirements|words)\b/i);
+    assert.doesNotMatch(
+      first.draft.plan.mission,
+      new RegExp(`\\b${previousPlan.scope.value}\\b`),
+    );
+    assert.equal(first.draft.revisions[0].type, "scope_reduction");
+    assert.equal(first.draft.revisions[0].fromValue, previousPlan.scope.value);
+    assert.equal(first.draft.revisions[0].toValue, first.draft.plan.scope.value);
+  }
+  assert.equal(formatScopeValue(PROOF_PATTERNS.make.scope, 1), "1 part");
+  assert.equal(formatScopeValue(PROOF_PATTERNS.check.scope, 1), "1 requirement");
 });
 
 test("declared scope cannot shrink below its explicit minimum", () => {
   const plan = generatePlan(validIntake);
   plan.scope.value = plan.scope.min;
   assert.throws(() => suggestSimplerPlan(plan), /already at its minimum/);
+});
+
+test("simplification repairs a manually diverged numeric mission claim", () => {
+  const plan = generatePlan({ ...validIntake, proofPattern: "check" });
+  plan.scope.value = 2;
+  const simplified = suggestSimplerPlan(plan);
+  assert.equal(simplified.scope.value, 1);
+  assert.match(simplified.mission, /up to 1 explicit requirement affecting/);
+  assert.doesNotMatch(simplified.mission, /up to 3 explicit requirements/);
 });
 
 test("invalid edited mission cannot start", () => {
@@ -335,6 +362,53 @@ test("one corrupt primary payload recovers the validated journal", () => {
   assert.deepEqual(recovered.state, state);
 });
 
+test("recovery selects the newest semantically valid revision", () => {
+  const older = serializeWorkspace(createEmptyState(), {
+    revision: 1,
+    writtenAt: "2026-07-12T02:00:00.000Z",
+    writerId: "tab-a",
+  });
+  const newerState = completedState();
+  const newer = serializeWorkspace(newerState, {
+    revision: 2,
+    writtenAt: "2026-07-12T02:05:00.000Z",
+    writerId: "tab-b",
+  });
+  const recovered = recoverWorkspace(older, newer, null);
+  assert.equal(recovered.revision, 2);
+  assert.equal(recovered.source, "journal");
+  assert.equal(recovered.recoveryReason, "newer_journal");
+  assert.equal(recovered.reset, false);
+  assert.deepEqual(recovered.state, newerState);
+});
+
+test("newer contradictory journal cannot displace an older valid primary", () => {
+  const primary = serializeWorkspace(completedState(), {
+    revision: 4,
+    writtenAt: "2026-07-12T02:05:00.000Z",
+    writerId: "tab-a",
+  });
+  const journal = JSON.parse(primary);
+  journal.revision = 5;
+  journal.state.goals[0].outcome.actionKind = "could_not_start";
+  journal.state.goals[0].sprint.action.kind = "could_not_start";
+  const recovered = recoverWorkspace(primary, JSON.stringify(journal), null);
+  assert.equal(recovered.revision, 4);
+  assert.equal(recovered.source, "primary");
+  assert.equal(recovered.recovered, false);
+  assert.deepEqual(recovered.invalidSources, ["journal"]);
+});
+
+test("double corruption reports a truthful empty reset, not a recovery", () => {
+  const recovered = recoverWorkspace("{bad", "{\"also\":", null);
+  assert.deepEqual(recovered.state, createEmptyState());
+  assert.equal(recovered.source, "empty");
+  assert.equal(recovered.recovered, false);
+  assert.equal(recovered.reset, true);
+  assert.equal(recovered.recoveryReason, "no_valid_copy");
+  assert.deepEqual(recovered.invalidSources, ["primary", "journal"]);
+});
+
 test("malformed import fails before state mutation and export round-trips", () => {
   const state = completedState();
   const exported = createExport(state, "2026-07-12T02:06:00.000Z");
@@ -344,6 +418,35 @@ test("malformed import fails before state mutation and export round-trips", () =
     () => parseImport(JSON.stringify({ format: "proof-of-possible-export", state: {} })),
     /valid Proof of Possible/,
   );
+});
+
+test("import recomputes evidence-bearing and confidence-derived fields", () => {
+  const exported = JSON.parse(createExport(completedState(), "2026-07-12T02:06:00.000Z"));
+  const outcome = exported.state.goals[0].outcome;
+  outcome.observation = "x";
+  outcome.evidenceBearing = true;
+  outcome.confidenceDelta = 999;
+  const imported = parseImport(JSON.stringify(exported));
+  assert.equal(imported.goals[0].outcome.evidenceBearing, false);
+  assert.equal(imported.goals[0].outcome.confidenceDelta, 10);
+  assert.equal(computeMetrics(imported).evidenceBearingReceipts, 0);
+});
+
+test("contradictory import is rejected before an existing workspace can change", () => {
+  const existing = completedState();
+  const snapshot = JSON.stringify(existing);
+  const exported = JSON.parse(createExport(existing, "2026-07-12T02:06:00.000Z"));
+  const goal = exported.state.goals[0];
+  goal.outcome.observation = "x";
+  goal.outcome.evidenceBearing = true;
+  goal.outcome.actionKind = "could_not_start";
+  goal.sprint.action.kind = "could_not_start";
+  assert.throws(
+    () => parseImport(JSON.stringify(exported)),
+    /semantically valid/,
+  );
+  assert.equal(JSON.stringify(existing), snapshot);
+  assert.equal(computeMetrics(existing).evidenceBearingReceipts, 1);
 });
 
 test("multi-tab merge preserves a committed receipt and frozen deadline", () => {

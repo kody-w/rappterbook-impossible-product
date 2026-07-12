@@ -13,6 +13,8 @@ const [
   frameTwo,
   timeline,
   packageJson,
+  buildScript,
+  serverScript,
 ] = await Promise.all([
   read("index.html"),
   read("styles.css"),
@@ -22,6 +24,8 @@ const [
   read("evolution/frames/frame-02.json").then(JSON.parse),
   read("evolution/timeline.json").then(JSON.parse),
   read("package.json").then(JSON.parse),
+  read("scripts/build.mjs"),
+  read("scripts/serve.mjs"),
 ]);
 const failures = [];
 
@@ -36,6 +40,14 @@ check(frameOne.selectedMutations.length === 3, "Frame 1 must preserve exactly th
 check(frameTwo.strategies.length === 8, "Frame 2 must preserve eight strategy audits.");
 check(frameTwo.selectedMutations.length === 3, "Frame 2 must select exactly three mutations.");
 check(frameTwo.consensus.selectedCount === 3, "Frame 2 consensus must report exactly three selections.");
+check(
+  JSON.stringify(frameTwo.selectedMutations.map((mutation) => mutation.id)) === JSON.stringify([
+    "assisted-experiment-compiler",
+    "criterion-linked-evidence",
+    "recoverable-local-workspace",
+  ]),
+  "Frame 2 must preserve the same three selected product mutations.",
+);
 check(
   frameTwo.consensus.candidateScores.every(
     (candidate) => candidate.total === candidate.auditVotes.reduce((sum, vote) => sum + vote, 0),
@@ -92,6 +104,35 @@ check(
   packageJson.devDependencies?.["@playwright/test"] === "1.61.1",
   "Playwright must be pinned exactly for reproducible release tests.",
 );
+check(
+  packageJson.scripts?.["test:e2e"]?.includes("npm run build"),
+  "Browser tests must build the artifact before opening it.",
+);
+check(
+  buildScript.includes("provenance.json")
+    && buildScript.includes("GITHUB_SHA")
+    && buildScript.includes("GITHUB_RUN_ID")
+    && buildScript.includes("GITHUB_RUN_ATTEMPT")
+    && buildScript.includes("contentDigest"),
+  "Build must emit deployed provenance and a deterministic content digest.",
+);
+check(
+  serverScript.includes('resolve(repositoryRoot, "_site")'),
+  "Browser test server must serve the built _site artifact.",
+);
+check(
+  frameTwo.release.currentDeploymentSourceOfTruth === "/provenance.json"
+    && !Object.hasOwn(frameTwo.release, "implementationCommitSha")
+    && !Object.hasOwn(frameTwo.release, "pagesWorkflowRunUrl"),
+  "Frame 2 must defer current deployment identity to generated provenance.",
+);
+check(
+  frameTwo.release.completionRelease?.selectedMutationCount === 3
+    && frameTwo.release.completionRelease?.strategyEvidenceFileCount === 8
+    && frameTwo.release.completionRelease?.nextFrameStarted === false
+    && frameTwo.release.completionRelease?.productMutationAdded === false,
+  "Frame 2 completion repair must not start Frame 3 or add a fourth mutation.",
+);
 
 const references = [...html.matchAll(/(?:src|href)=["']([^"']+)["']/g)]
   .map((match) => match[1]);
@@ -113,6 +154,20 @@ const [testWorkflow, pagesWorkflow] = await Promise.all([
 ]);
 check(testWorkflow.includes("npm run test:e2e"), "Test workflow must block on the browser contract.");
 check(pagesWorkflow.includes("npm run test:e2e"), "Pages validation must block on the browser contract.");
+check(
+  pagesWorkflow.indexOf("npm run test:e2e")
+    < pagesWorkflow.indexOf("actions/upload-pages-artifact@v3"),
+  "Pages must upload only after browser tests pass.",
+);
+check(
+  pagesWorkflow.indexOf("actions/upload-pages-artifact@v3")
+    < pagesWorkflow.indexOf("actions/deploy-pages@v4"),
+  "Pages must deploy the already-tested uploaded artifact.",
+);
+check(
+  !pagesWorkflow.includes("node scripts/build.mjs"),
+  "Pages deploy job must not rebuild after the browser-tested artifact is uploaded.",
+);
 
 if (failures.length > 0) {
   failures.forEach((failure) => console.error(`FAIL: ${failure}`));

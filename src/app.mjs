@@ -13,6 +13,7 @@ import {
   findGoal,
   formatConfidenceDelta,
   formatMinutes,
+  formatScopeValue,
   getRemainingSeconds,
   mergeStates,
   parseImport,
@@ -85,9 +86,22 @@ function loadState() {
     );
     state = loaded.state;
     storageRevision = loaded.revision;
-    element("recovery-warning").hidden = !loaded.recovered;
+    const recoveryWarning = element("recovery-warning");
+    recoveryWarning.hidden = !loaded.recovered;
+    if (loaded.recoveryReason === "newer_journal") {
+      recoveryWarning.textContent = `A newer validated journal revision (${loaded.revision}) was loaded instead of the older primary copy.`;
+    } else if (loaded.recoveryReason === "invalid_primary") {
+      recoveryWarning.textContent = "The primary workspace was invalid. A semantically validated journal copy was recovered.";
+    } else if (loaded.recoveryReason === "journal_only") {
+      recoveryWarning.textContent = "The journal was the only saved workspace copy and was recovered successfully.";
+    }
+    const resetWarning = element("reset-warning");
+    resetWarning.hidden = !loaded.reset;
+    if (loaded.reset) {
+      resetWarning.textContent = "Saved workspace copies were present, but none passed semantic validation. The app opened an empty workspace without claiming recovery; corrupt copies remain until you save or delete.";
+    }
     element("migration-notice").hidden = !loaded.migrated;
-    if (loaded.migrated) {
+    if (loaded.migrated || loaded.repaired) {
       persistState();
     }
   } catch {
@@ -310,7 +324,7 @@ function setReviewValues(draft) {
   element("scopeValue").value = String(draft.plan.scope.value);
   element("scopeValue").min = String(draft.plan.scope.min);
   element("scope-label").textContent = draft.plan.scope.label;
-  element("scope-hint").textContent = `Minimum ${draft.plan.scope.min} ${draft.plan.scope.unit}; currently ${draft.plan.scope.value}. “Reduce” must lower this number.`;
+  element("scope-hint").textContent = `Minimum ${formatScopeValue(draft.plan.scope, draft.plan.scope.min)}; currently ${formatScopeValue(draft.plan.scope)}. “Reduce” must lower this number.`;
   element("timeboxMinutes").value = String(draft.intake.timeboxMinutes);
   element("why").value = draft.intake.why;
   element("baselineConfidence").value = String(draft.intake.baselineConfidence);
@@ -379,7 +393,7 @@ function renderSprint(goal) {
   element("active-mission").textContent = plan.mission;
   element("active-success").textContent = plan.successCriterion;
   element("active-stop").textContent = plan.stopCondition;
-  element("active-scope").textContent = `${plan.scope.label}: ${plan.scope.value} ${plan.scope.unit}`;
+  element("active-scope").textContent = `${plan.scope.label}: ${formatScopeValue(plan.scope)}`;
   element("frozen-at").textContent = formatDate(goal.sprint.startedAt);
   renderProvenance(goal);
   renderTimer();
@@ -746,7 +760,8 @@ function exportData() {
 }
 
 async function importData(event) {
-  const [file] = event.currentTarget.files;
+  const input = event.currentTarget;
+  const [file] = input.files;
   if (!file) {
     return;
   }
@@ -762,8 +777,14 @@ async function importData(event) {
     element("import-status").textContent = `Import rejected: ${error.message} No local data changed.`;
     announce("Import rejected without changing local data.");
   } finally {
-    event.currentTarget.value = "";
+    input.value = "";
   }
+}
+
+function focusMainContent() {
+  requestAnimationFrame(() => {
+    element("main-content").focus({ preventScroll: true });
+  });
 }
 
 function clearLocalData() {
@@ -824,6 +845,26 @@ async function loadTimeline() {
   }
 }
 
+async function loadProvenance() {
+  const target = element("release-provenance");
+  try {
+    const response = await fetch("./provenance.json", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Provenance returned ${response.status}`);
+    }
+    const provenance = await response.json();
+    if (typeof provenance.GITHUB_SHA !== "string"
+        || typeof provenance.contentDigest?.value !== "string") {
+      throw new Error("Provenance shape is invalid");
+    }
+    const source = provenance.GITHUB_SHA.slice(0, 12);
+    const content = provenance.contentDigest.value.slice(0, 12);
+    target.textContent = `Release ${source} · content ${content}`;
+  } catch {
+    target.textContent = "Deployed release provenance unavailable.";
+  }
+}
+
 function handleStorageEvent(event) {
   if (event.key !== STORAGE_KEY) {
     return;
@@ -855,6 +896,7 @@ function handleStorageEvent(event) {
 }
 
 function bindEvents() {
+  document.querySelector(".skip-link").addEventListener("click", focusMainContent);
   const intakeForm = element("intake-form");
   intakeForm.addEventListener("submit", handleIntakeSubmit);
   intakeForm.addEventListener("input", autosaveIntake);
@@ -911,3 +953,4 @@ bindEvents();
 renderAll();
 restoreFlow(false);
 loadTimeline();
+loadProvenance();

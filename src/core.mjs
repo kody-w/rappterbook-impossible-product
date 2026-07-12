@@ -14,6 +14,7 @@ export const CRITERION_VERDICTS = new Set([
   "inconclusive",
 ]);
 export const ACTION_KINDS = new Set(["taken", "could_not_start"]);
+const SUCCESSOR_DECISIONS = new Set(["continue", "revise_shrink", "seek_access"]);
 
 export const PROOF_PATTERNS = Object.freeze({
   ask: {
@@ -74,6 +75,13 @@ const PLAN_LIMITS = {
 };
 
 const MAX_SERIALIZED_BYTES = 5_000_000;
+const MAX_WORKSPACE_REVISION = Number.MAX_SAFE_INTEGER - 1;
+const SINGULAR_UNITS = Object.freeze({
+  parts: "part",
+  requirements: "requirement",
+  units: "unit",
+  words: "word",
+});
 
 function cleanText(value) {
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
@@ -145,13 +153,29 @@ function replaceGoal(state, updatedGoal, activeGoalId = state.activeGoalId) {
   };
 }
 
-function replaceScopePhrase(text, scope, nextValue) {
-  const escapedUnit = scope.unit.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const pattern = new RegExp(`\\b${scope.value}\\s+${escapedUnit}\\b`, "i");
-  if (pattern.test(text)) {
-    return text.replace(pattern, `${nextValue} ${scope.unit}`);
+function escapeRegularExpression(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function scopePhrasePattern(scope) {
+  const singular = escapeRegularExpression(SINGULAR_UNITS[scope.unit] ?? scope.unit);
+  const plural = escapeRegularExpression(scope.unit);
+  if (scope.key === "requirements") {
+    return new RegExp(`\\bup to\\s+\\d+\\s+explicit\\s+(?:${singular}|${plural})\\b`, "i");
   }
-  return `${text.replace(/[.\s]+$/u, "")}. Limit ${scope.label.toLowerCase()} to ${nextValue} ${scope.unit}.`;
+  return new RegExp(`\\b\\d+\\s+(?:${singular}|${plural})\\b`, "i");
+}
+
+function replaceScopePhrase(text, scope, nextValue) {
+  const pattern = scopePhrasePattern(scope);
+  const quantity = formatScopeValue(scope, nextValue);
+  const replacement = scope.key === "requirements"
+    ? `up to ${nextValue} explicit ${nextValue === 1 ? SINGULAR_UNITS[scope.unit] : scope.unit}`
+    : quantity;
+  if (pattern.test(text)) {
+    return text.replace(pattern, replacement);
+  }
+  return `${text.replace(/[.\s]+$/u, "")}. Limit ${scope.label.toLowerCase()} to ${quantity}.`;
 }
 
 function uniqueRevisions(first = [], second = []) {
@@ -187,6 +211,10 @@ function hasSafeUrl(value) {
   } catch {
     return false;
   }
+}
+
+function isTimestamp(value) {
+  return typeof value === "string" && Number.isFinite(Date.parse(value));
 }
 
 function isScopeShape(scope) {
@@ -226,7 +254,7 @@ function isIntakeShape(intake, requireValid = true) {
   return structural && (!requireValid || validateIntake(intake).valid);
 }
 
-function isOutcomeShape(outcome) {
+function isOutcomeStructure(outcome) {
   return outcome === null || (
     outcome
     && typeof outcome === "object"
@@ -234,22 +262,23 @@ function isOutcomeShape(outcome) {
     && ACTION_KINDS.has(outcome.actionKind)
     && CRITERION_VERDICTS.has(outcome.criterionVerdict)
     && typeof outcome.observation === "string"
+    && outcome.observation.length <= 2000
     && typeof outcome.url === "string"
     && hasSafeUrl(outcome.url)
-    && typeof outcome.evidenceBearing === "boolean"
     && outcome.externalVerification === "not_independently_verified"
     && Number.isInteger(outcome.postConfidence)
-    && Number.isInteger(outcome.confidenceDelta)
-    && typeof outcome.recordedAt === "string"
+    && outcome.postConfidence >= 0
+    && outcome.postConfidence <= 100
+    && isTimestamp(outcome.recordedAt)
   );
 }
 
-function isGoalShape(goal) {
+function isGoalStructure(goal) {
   return goal
     && typeof goal === "object"
-    && typeof goal.id === "string"
-    && typeof goal.createdAt === "string"
-    && typeof goal.updatedAt === "string"
+    && isMeaningful(goal.id, 1)
+    && isTimestamp(goal.createdAt)
+    && isTimestamp(goal.updatedAt)
     && ["running", ...OUTCOME_STATUSES].includes(goal.status)
     && isIntakeShape(goal.intake)
     && isPlanShape(goal.originalPlan)
@@ -257,16 +286,18 @@ function isGoalShape(goal) {
     && Array.isArray(goal.revisions)
     && goal.sprint
     && Number.isInteger(goal.sprint.durationSeconds)
-    && typeof goal.sprint.startedAt === "string"
-    && typeof goal.sprint.endsAt === "string"
+    && goal.sprint.durationSeconds > 0
+    && isTimestamp(goal.sprint.startedAt)
+    && isTimestamp(goal.sprint.endsAt)
     && (goal.sprint.action === null || (
       ACTION_KINDS.has(goal.sprint.action.kind)
-      && typeof goal.sprint.action.recordedAt === "string"
+      && isTimestamp(goal.sprint.action.recordedAt)
       && Number.isInteger(goal.sprint.action.elapsedSeconds)
+      && goal.sprint.action.elapsedSeconds >= 0
     ))
-    && isOutcomeShape(goal.outcome)
+    && isOutcomeStructure(goal.outcome)
     && (goal.predecessorId === null || typeof goal.predecessorId === "string")
-    && typeof goal.lineageRootId === "string"
+    && isMeaningful(goal.lineageRootId, 1)
     && (goal.decision === null || typeof goal.decision === "string");
 }
 
@@ -274,9 +305,9 @@ function isDraftShape(draft) {
   return draft === null || (
     draft
     && typeof draft === "object"
-    && typeof draft.id === "string"
+    && isMeaningful(draft.id, 1)
     && ["intake", "review"].includes(draft.stage)
-    && typeof draft.updatedAt === "string"
+    && isTimestamp(draft.updatedAt)
     && isIntakeShape(draft.intake, false)
     && (draft.plan === null || isPlanShape(draft.plan, false))
     && (draft.originalPlan === null || isPlanShape(draft.originalPlan))
@@ -287,18 +318,96 @@ function isDraftShape(draft) {
   );
 }
 
-function isStateShape(value) {
+function isStateStructure(value) {
   return value
     && typeof value === "object"
     && value.version === STATE_VERSION
     && Array.isArray(value.goals)
     && value.goals.length <= 10_000
-    && value.goals.every(isGoalShape)
+    && value.goals.every(isGoalStructure)
     && (value.activeGoalId === null || typeof value.activeGoalId === "string")
     && isDraftShape(value.draft)
     && value.settings
     && typeof value.settings.timerHidden === "boolean"
-    && typeof value.settings.updatedAt === "string";
+    && isTimestamp(value.settings.updatedAt);
+}
+
+function hasGoalSemantics(goal, requireDerived = true) {
+  if (goal.outcome === null) {
+    return goal.status === "running" && goal.sprint.action === null;
+  }
+  const { outcome } = goal;
+  const action = goal.sprint.action;
+  const actionMatches = action
+    && action.kind === outcome.actionKind
+    && action.recordedAt === outcome.recordedAt;
+  const blockedMatches = outcome.actionKind !== "could_not_start"
+    || (outcome.status === "blocked" && outcome.criterionVerdict === "blocked");
+  const derivedMatches = !requireDerived || (
+    outcome.evidenceBearing === isEvidenceBearingObservation(outcome.observation)
+    && outcome.confidenceDelta === outcome.postConfidence - goal.intake.baselineConfidence
+  );
+  return goal.status === outcome.status
+    && goal.status !== "running"
+    && actionMatches
+    && blockedMatches
+    && derivedMatches;
+}
+
+function hasStateSemantics(value, requireDerived = true) {
+  const ids = new Set(value.goals.map((goal) => goal.id));
+  if (ids.size !== value.goals.length
+      || !value.goals.every((goal) => hasGoalSemantics(goal, requireDerived))) {
+    return false;
+  }
+  const lineageIsValid = value.goals.every((goal) => (
+    ids.has(goal.lineageRootId)
+    && (
+      (goal.predecessorId === null && goal.decision === null)
+      || (ids.has(goal.predecessorId) && SUCCESSOR_DECISIONS.has(goal.decision))
+    )
+  ));
+  const draftIsValid = value.draft === null || (
+    (value.draft.stage !== "review" || (value.draft.plan && value.draft.originalPlan))
+    && (
+      (value.draft.predecessorId === null && value.draft.decision === null)
+      || (ids.has(value.draft.predecessorId)
+        && SUCCESSOR_DECISIONS.has(value.draft.decision))
+    )
+  );
+  if (!lineageIsValid || !draftIsValid) {
+    return false;
+  }
+  if (value.activeGoalId === null) {
+    return true;
+  }
+  const active = value.goals.find((goal) => goal.id === value.activeGoalId);
+  return Boolean(active && active.status === "running" && active.outcome === null);
+}
+
+function isStateShape(value) {
+  return isStateStructure(value) && hasStateSemantics(value, true);
+}
+
+function normalizeExternalState(value) {
+  if (!isStateStructure(value) || !hasStateSemantics(value, false)) {
+    throw new Error("Workspace state failed semantic validation.");
+  }
+  const state = clone(value);
+  for (const goal of state.goals) {
+    if (!goal.outcome) {
+      continue;
+    }
+    goal.outcome.evidenceBearing = isEvidenceBearingObservation(goal.outcome.observation);
+    goal.outcome.confidenceDelta = goal.outcome.postConfidence - goal.intake.baselineConfidence;
+  }
+  if (!isStateShape(state)) {
+    throw new Error("Workspace state could not be normalized safely.");
+  }
+  return {
+    state,
+    repaired: JSON.stringify(state) !== JSON.stringify(value),
+  };
 }
 
 function parseSerialized(serialized) {
@@ -312,27 +421,31 @@ function parseWorkspaceStrict(serialized) {
   const parsed = parseSerialized(serialized);
   if (parsed?.format === WORKSPACE_FORMAT) {
     if (parsed.schemaVersion !== STATE_VERSION
-        || !Number.isInteger(parsed.revision)
+        || !Number.isSafeInteger(parsed.revision)
         || parsed.revision < 0
-        || typeof parsed.writtenAt !== "string"
-        || typeof parsed.writerId !== "string"
-        || !isStateShape(parsed.state)) {
+        || parsed.revision > MAX_WORKSPACE_REVISION
+        || !isTimestamp(parsed.writtenAt)
+        || !isMeaningful(parsed.writerId, 1)) {
       throw new Error("Workspace envelope failed validation.");
     }
-    return parsed;
+    const normalized = normalizeExternalState(parsed.state);
+    return { ...parsed, ...normalized };
   }
-  if (parsed?.version === STATE_VERSION && isStateShape(parsed)) {
+  if (parsed?.version === STATE_VERSION) {
+    const normalized = normalizeExternalState(parsed);
     return {
       format: WORKSPACE_FORMAT,
       schemaVersion: STATE_VERSION,
       revision: 0,
       writtenAt: new Date(0).toISOString(),
       writerId: "unversioned",
-      state: parsed,
+      ...normalized,
     };
   }
   if (parsed?.version === 1) {
-    return migrateVersionOne(parsed);
+    const migrated = migrateVersionOne(parsed);
+    const normalized = normalizeExternalState(migrated.state);
+    return { ...migrated, ...normalized, migrated: true };
   }
   throw new Error("Unsupported workspace schema.");
 }
@@ -481,6 +594,11 @@ export function formatMinutes(minutes) {
   return `${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
 }
 
+export function formatScopeValue(scope, value = scope.value) {
+  const unit = value === 1 ? SINGULAR_UNITS[scope.unit] ?? scope.unit : scope.unit;
+  return `${value} ${unit}`;
+}
+
 export function createEmptyState() {
   return {
     version: STATE_VERSION,
@@ -526,20 +644,22 @@ export function generatePlan(input) {
   const scope = clone(pattern.scope);
   const quotedGoal = `“${intake.goal}”`;
   const quotedConstraint = `“${intake.obstacle}”`;
+  const scopeQuantity = formatScopeValue(scope);
   let mission;
   let successCriterion;
 
   if (intake.proofPattern === "ask") {
-    mission = `Ask one relevant person one question of ${scope.value} ${scope.unit} or fewer about whether ${quotedGoal} can move within ${quotedConstraint}.`;
+    mission = `Ask one relevant person one question of ${scopeQuantity} or fewer about whether ${quotedGoal} can move within ${quotedConstraint}.`;
     successCriterion = "Observed if that person gives one specific answer; not observed if no answer arrives.";
   } else if (intake.proofPattern === "make") {
-    mission = `Make one rough artifact with no more than ${scope.value} ${scope.unit} that demonstrates ${quotedGoal} while respecting ${quotedConstraint}.`;
+    mission = `Make one rough artifact with no more than ${scopeQuantity} that demonstrates ${quotedGoal} while respecting ${quotedConstraint}.`;
     successCriterion = "Observed if one artifact can be opened or shown and contains at least one concrete part.";
   } else if (intake.proofPattern === "check") {
-    mission = `Check one authoritative source for up to ${scope.value} explicit ${scope.unit} affecting ${quotedGoal} under ${quotedConstraint}.`;
+    const requirementUnit = scope.value === 1 ? SINGULAR_UNITS[scope.unit] : scope.unit;
+    mission = `Check one authoritative source for up to ${scope.value} explicit ${requirementUnit} affecting ${quotedGoal} under ${quotedConstraint}.`;
     successCriterion = "Observed if the source gives an explicit yes, no, threshold, or requirement.";
   } else {
-    mission = `Send one reversible probe of ${scope.value} ${scope.unit} or fewer about ${quotedGoal} to one real target while honoring ${quotedConstraint}.`;
+    mission = `Send one reversible probe of ${scopeQuantity} or fewer about ${quotedGoal} to one real target while honoring ${quotedConstraint}.`;
     successCriterion = "Observed if the probe is sent and its delivery or response state is visible.";
   }
 
@@ -648,7 +768,7 @@ export function shrinkDraft(state, now) {
   const revision = {
     type: "scope_reduction",
     recordedAt: now,
-    reason: `${from.scope.label} reduced from ${from.scope.value} to ${to.scope.value} ${to.scope.unit}.`,
+    reason: `${from.scope.label} reduced from ${formatScopeValue(from.scope)} to ${formatScopeValue(to.scope)}.`,
     scopeKey: from.scope.key,
     fromValue: from.scope.value,
     toValue: to.scope.value,
@@ -840,7 +960,8 @@ export function recordOutcome(state, goalId, input, now) {
 export function computeMetrics(state) {
   const sprintsStarted = state.goals.length;
   const evidenceBearingReceipts = state.goals.filter(
-    (goal) => goal.outcome?.evidenceBearing
+    (goal) => goal.outcome
+      && isEvidenceBearingObservation(goal.outcome.observation)
       && CRITERION_VERDICTS.has(goal.outcome.criterionVerdict),
   ).length;
   const criterionLinkedEvidenceRate = sprintsStarted === 0
@@ -873,7 +994,7 @@ export function createLinkedDraft(state, goalId, decision, metadata) {
   if (!goal?.outcome) {
     throw new Error("A completed receipt is required to create a successor.");
   }
-  if (!["continue", "revise_shrink", "seek_access"].includes(decision)) {
+  if (!SUCCESSOR_DECISIONS.has(decision)) {
     throw new Error("Unknown successor decision.");
   }
   const intake = {
@@ -934,8 +1055,13 @@ export function formatConfidenceDelta(delta) {
 function mergeGoal(first, second) {
   const preferred = laterValue(first, second, "updatedAt");
   const other = preferred === first ? second : first;
-  const outcome = laterValue(first.outcome, second.outcome, "recordedAt");
-  const action = laterValue(first.sprint?.action, second.sprint?.action, "recordedAt");
+  const outcomeSource = laterValue(
+    first.outcome ? first : null,
+    second.outcome ? second : null,
+    "updatedAt",
+  );
+  const outcome = outcomeSource?.outcome ?? null;
+  const action = outcomeSource?.sprint.action ?? null;
   return {
     ...other,
     ...preferred,
@@ -970,13 +1096,17 @@ export function mergeStates(first, second) {
     .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))[0];
   const draft = laterValue(first.draft, second.draft, "updatedAt") ?? null;
   const settings = laterValue(first.settings, second.settings, "updatedAt");
-  return {
+  const merged = {
     version: STATE_VERSION,
     goals,
     activeGoalId: running?.id ?? null,
     draft: draft ? clone(draft) : null,
     settings: clone(settings),
   };
+  if (!isStateShape(merged)) {
+    throw new Error("Merged workspace state failed semantic validation.");
+  }
+  return merged;
 }
 
 export function serializeState(state) {
@@ -990,10 +1120,11 @@ export function serializeWorkspace(state, metadata) {
   if (!isStateShape(state)) {
     throw new Error("Refusing to serialize invalid workspace state.");
   }
-  if (!Number.isInteger(metadata?.revision)
+  if (!Number.isSafeInteger(metadata?.revision)
       || metadata.revision < 0
-      || !metadata?.writtenAt
-      || !metadata?.writerId) {
+      || metadata.revision > MAX_WORKSPACE_REVISION
+      || !isTimestamp(metadata?.writtenAt)
+      || !isMeaningful(metadata?.writerId, 1)) {
     throw new Error("Workspace metadata is incomplete.");
   }
   return JSON.stringify({
@@ -1010,30 +1141,70 @@ export function deserializeWorkspace(serialized) {
   return parseWorkspaceStrict(serialized);
 }
 
+function compareWorkspaceCandidates(left, right) {
+  if (left.workspace.revision !== right.workspace.revision) {
+    return right.workspace.revision - left.workspace.revision;
+  }
+  const timestampDifference = Date.parse(right.workspace.writtenAt)
+    - Date.parse(left.workspace.writtenAt);
+  if (timestampDifference !== 0) {
+    return timestampDifference;
+  }
+  return left.source === "primary" ? -1 : 1;
+}
+
+function recoveryResult(candidate, primaryCandidate, invalidSources) {
+  const recovered = candidate.source === "journal";
+  let recoveryReason = "none";
+  if (recovered && primaryCandidate) {
+    recoveryReason = "newer_journal";
+  } else if (recovered && invalidSources.includes("primary")) {
+    recoveryReason = "invalid_primary";
+  } else if (recovered) {
+    recoveryReason = "journal_only";
+  }
+  return {
+    state: candidate.workspace.state,
+    revision: candidate.workspace.revision,
+    writerId: candidate.workspace.writerId,
+    source: candidate.source,
+    recovered,
+    recoveryReason,
+    reset: false,
+    invalidSources,
+    migrated: Boolean(candidate.workspace.migrated),
+    repaired: Boolean(candidate.workspace.repaired),
+  };
+}
+
 export function recoverWorkspace(primary, journal, legacy) {
-  const attempts = [
-    ["primary", primary],
-    ["journal", journal],
-    ["legacy", legacy],
-  ];
+  const currentCopies = [["primary", primary], ["journal", journal]];
+  const candidates = [];
+  const invalidSources = [];
   let sawPayload = false;
-  for (const [source, payload] of attempts) {
+  for (const [source, payload] of currentCopies) {
     if (!payload) {
       continue;
     }
     sawPayload = true;
     try {
-      const workspace = parseWorkspaceStrict(payload);
-      return {
-        state: workspace.state,
-        revision: workspace.revision,
-        writerId: workspace.writerId,
-        source,
-        recovered: source !== "primary",
-        migrated: Boolean(workspace.migrated),
-      };
+      candidates.push({ source, workspace: parseWorkspaceStrict(payload) });
     } catch {
-      // Try the next independent copy.
+      invalidSources.push(source);
+    }
+  }
+  if (candidates.length > 0) {
+    candidates.sort(compareWorkspaceCandidates);
+    const primaryCandidate = candidates.find((candidate) => candidate.source === "primary");
+    return recoveryResult(candidates[0], primaryCandidate, invalidSources);
+  }
+  if (legacy) {
+    sawPayload = true;
+    try {
+      const candidate = { source: "legacy", workspace: parseWorkspaceStrict(legacy) };
+      return recoveryResult(candidate, null, invalidSources);
+    } catch {
+      invalidSources.push("legacy");
     }
   }
   return {
@@ -1041,8 +1212,12 @@ export function recoverWorkspace(primary, journal, legacy) {
     revision: 0,
     writerId: "empty",
     source: "empty",
-    recovered: sawPayload,
+    recovered: false,
+    recoveryReason: sawPayload ? "no_valid_copy" : "none",
+    reset: sawPayload,
+    invalidSources,
     migrated: false,
+    repaired: false,
   };
 }
 
@@ -1068,9 +1243,12 @@ export function parseImport(serialized) {
   const parsed = parseSerialized(serialized);
   if (parsed?.format !== EXPORT_FORMAT
       || parsed.schemaVersion !== STATE_VERSION
-      || typeof parsed.exportedAt !== "string"
-      || !isStateShape(parsed.state)) {
+      || !isTimestamp(parsed.exportedAt)) {
     throw new Error("This file is not a valid Proof of Possible v2 export.");
   }
-  return clone(parsed.state);
+  try {
+    return normalizeExternalState(parsed.state).state;
+  } catch {
+    throw new Error("This file is not a semantically valid Proof of Possible v2 export.");
+  }
 }

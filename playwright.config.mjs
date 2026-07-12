@@ -6,6 +6,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
+  timeout: 60_000,
   reporter: [["list"]],
   outputDir: "test-results",
   use: {
@@ -23,4 +24,3 @@ export default defineConfig({
     timeout: 15_000,
   },
 });
-

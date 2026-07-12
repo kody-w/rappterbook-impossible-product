@@ -4,7 +4,8 @@ import { createServer } from "node:http";
 import { dirname, extname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const root = resolve(repositoryRoot, "_site");
 const port = Number(process.env.PORT ?? 4173);
 const mimeTypes = {
   ".css": "text/css; charset=utf-8",
@@ -45,6 +46,5 @@ const server = createServer(async (request, response) => {
 });
 
 server.listen(port, "127.0.0.1", () => {
-  console.log(`Proof of Possible test server listening on http://127.0.0.1:${port}`);
+  console.log(`Proof of Possible built artifact listening on http://127.0.0.1:${port}`);
 });
-

@@ -164,7 +164,7 @@
     "recordedAt": "2026-07-12T02:11:13Z"
   },
   "release": {
-    "implementationCommitSha": null,
+    "implementationCommitSha": "2ad9e0696fd049ed5ce4aa1d82fb8947a46e236e",
     "deployedUrl": "https://kody-w.github.io/rappterbook-impossible-product/",
     "deploymentStatus": "Pages configured for workflow deployment; initial workflow pending",
     "pagesWorkflow": ".github/workflows/pages.yml"

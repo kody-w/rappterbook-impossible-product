@@ -52,7 +52,7 @@ Open <http://127.0.0.1:4173>.
 Node.js 20 or newer is required.
 
 ```bash
-# 66 domain/deployment/release-contract tests plus static release invariants
+# 75 domain/deployment/release-contract tests (66 prior + 9 policy mutations)
 npm test
 
 # Build once in explicit trusted local mode, then run 15 Chromium journeys
@@ -69,9 +69,9 @@ npm run build:local
 
 The build writes `_site/provenance.json` with the exact source SHA, Actions run ID/attempt, build timestamp, git tree SHA, per-file SHA-256 hashes, and a deterministic content digest. `provenance.json` excludes itself, avoiding self-reference.
 
-Both workflows build `_site` exactly once before Chromium. They snapshot every artifact byte, test only `_site`, and verify immutability after tests. Pages verifies a second time immediately before uploading only `_site`; static policy tests reject a rebuild or filesystem mutation in that interval. A required job then downloads that exact Pages artifact and retries live comparison of provenance plus every manifest asset hash without following redirects.
+Both workflows build `_site` exactly once before Chromium. They snapshot every artifact byte, test only `_site`, and verify immutability after tests. The Pages validation job is a fail-closed structural allowlist: its ordered build → snapshot → browser → verification → `_site` upload steps must match exactly, and no extra command, shell block, alias, action, or mutation is accepted. Nine mutation contracts cover equivalent build commands, a post-browser touch, multiline shell, an extra pinned action, reordering, missing verification, and upload-path drift. A required job then downloads that exact Pages artifact and retries live comparison of provenance plus every manifest asset hash without following redirects.
 
-After the repaired gate passes, the exact Pages artifact is retained at the [`frame-03` release](https://github.com/kody-w/rappterbook-impossible-product/releases/tag/frame-03). No signing identity is configured, so this is hash-verifiable unsigned provenance—not a claimed cryptographic signature. The repair changes release integrity only: Frame 4 remains pending and no fourth Frame 3 product mutation was added.
+After the repaired gate passes, the exact Pages artifact is retained at the new [`frame-03.2` release](https://github.com/kody-w/rappterbook-impossible-product/releases/tag/frame-03.2); the rejected `frame-03` tag remains unchanged. No signing identity is configured, so this is hash-verifiable unsigned provenance—not a claimed cryptographic signature. The repair changes release integrity only: Frame 4 remains pending and no fourth Frame 3 product mutation was added.
 
 ## Architecture
 

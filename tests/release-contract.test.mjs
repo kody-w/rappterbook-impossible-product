@@ -191,6 +191,98 @@ test("policy rejects a mutable action tag and a non-attested upload path", async
   assert.ok(problems.some((problem) => problem.includes("attested _site")));
 });
 
+const pagesPolicyMutations = [
+  {
+    name: "npm run build --silent alias",
+    mutate: (source) => source.replace(
+      "        run: npm run build\n      - name: Snapshot",
+      "        run: npm run build --silent\n      - name: Snapshot",
+    ),
+  },
+  {
+    name: "direct node scripts/build.mjs invocation",
+    mutate: (source) => source.replace(
+      "        run: npm run build\n      - name: Snapshot",
+      "        run: node scripts/build.mjs\n      - name: Snapshot",
+    ),
+  },
+  {
+    name: "sh -c build alias",
+    mutate: (source) => source.replace(
+      "        run: npm run build\n      - name: Snapshot",
+      "        run: sh -c 'npm run build'\n      - name: Snapshot",
+    ),
+  },
+  {
+    name: "harmless-looking post-browser touch",
+    mutate: (source) => source.replace(
+      "      - name: Verify artifact immutability after browser tests",
+      "      - name: Touch the tested site\n"
+        + "        run: touch _site/x\n"
+        + "      - name: Verify artifact immutability after browser tests",
+    ),
+  },
+  {
+    name: "multiline build run block",
+    mutate: (source) => source.replace(
+      "        run: npm run build\n      - name: Snapshot",
+      "        run: |\n"
+        + "          npm run build\n"
+        + "      - name: Snapshot",
+    ),
+  },
+  {
+    name: "extra pinned uses action",
+    mutate: (source) => source.replace(
+      "      - name: Upload the tested Pages artifact",
+      "      - name: Unexpected pinned action\n"
+        + "        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1\n"
+        + "      - name: Upload the tested Pages artifact",
+    ),
+  },
+  {
+    name: "critical step reordering",
+    mutate: (source) => source.replace(
+      "      - name: Build the browser-tested Pages artifact once\n"
+        + "        run: npm run build\n"
+        + "      - name: Snapshot the browser-tested Pages artifact\n"
+        + "        run: node scripts/attest-artifact.mjs snapshot",
+      "      - name: Snapshot the browser-tested Pages artifact\n"
+        + "        run: node scripts/attest-artifact.mjs snapshot\n"
+        + "      - name: Build the browser-tested Pages artifact once\n"
+        + "        run: npm run build",
+    ),
+  },
+  {
+    name: "missing pre-upload verification",
+    mutate: (source) => source.replace(
+      "      - name: Verify artifact immutability immediately before upload\n"
+        + "        run: node scripts/attest-artifact.mjs verify\n",
+      "",
+    ),
+  },
+  {
+    name: "changed upload path",
+    mutate: (source) => source.replace("          path: _site", "          path: _site/"),
+  },
+];
+
+for (const policyMutation of pagesPolicyMutations) {
+  test(`fail-closed Pages policy rejects ${policyMutation.name}`, async () => {
+    const pagesWorkflow = await readFile(
+      resolve(root, ".github/workflows/pages.yml"),
+      "utf8",
+    );
+    const mutated = policyMutation.mutate(pagesWorkflow);
+    assert.notEqual(mutated, pagesWorkflow, "mutation fixture did not alter the workflow");
+    const problems = workflowPolicyProblems(mutated, "pages");
+    assert.ok(
+      problems.some((problem) => problem.includes("not allowlisted")),
+      `mutation escaped structural allowlist: ${JSON.stringify(problems)}`,
+    );
+  });
+}
+
 test("Frame 3 ranking is derived from votes with score 20 above score 17", async () => {
   const frame = JSON.parse(
     await readFile(resolve(root, "evolution/frames/frame-03.json"), "utf8"),

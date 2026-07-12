@@ -39,6 +39,212 @@ function parseSteps(source) {
   return steps;
 }
 
+const PAGES_VALIDATE_STEPS = [
+  {
+    name: "Check out repository",
+    uses: "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1",
+    with: { "fetch-depth": "2" },
+  },
+  {
+    name: "Use Node.js",
+    uses: "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0",
+    with: { "cache": "npm", "node-version": "22" },
+  },
+  {
+    name: "Install locked test dependencies",
+    run: { style: "block", lines: ['mkdir -p "$TMPDIR"', "npm ci"] },
+  },
+  {
+    name: "Run unit and static release tests",
+    run: { style: "scalar", value: "npm test" },
+  },
+  {
+    name: "Install locked Chromium",
+    run: {
+      style: "scalar",
+      value: "npx playwright install --with-deps chromium",
+    },
+  },
+  {
+    name: "Build the browser-tested Pages artifact once",
+    run: { style: "scalar", value: "npm run build" },
+  },
+  {
+    name: "Snapshot the browser-tested Pages artifact",
+    run: {
+      style: "scalar",
+      value: "node scripts/attest-artifact.mjs snapshot",
+    },
+  },
+  {
+    name: "Run browser release contract",
+    run: { style: "scalar", value: "npm run test:e2e" },
+  },
+  {
+    name: "Verify artifact immutability after browser tests",
+    run: {
+      style: "scalar",
+      value: "node scripts/attest-artifact.mjs verify",
+    },
+  },
+  {
+    name: "Verify artifact immutability immediately before upload",
+    run: {
+      style: "scalar",
+      value: "node scripts/attest-artifact.mjs verify",
+    },
+  },
+  {
+    name: "Upload the tested Pages artifact",
+    uses: "actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1",
+    with: { path: "_site" },
+  },
+];
+
+function lineIndent(line) {
+  return line.match(/^ */)[0].length;
+}
+
+function jobStepBlocks(source, jobName) {
+  const lines = source.split("\n");
+  const jobIndexes = lines.flatMap((line, index) => (
+    line === `  ${jobName}:` ? [index] : []
+  ));
+  if (jobIndexes.length !== 1) {
+    return { blocks: [], problems: [`Workflow must define exactly one jobs.${jobName}`] };
+  }
+  const jobIndex = jobIndexes[0];
+  const jobEnd = lines.findIndex((line, index) => (
+    index > jobIndex && line.trim() && !line.trim().startsWith("#") && lineIndent(line) <= 2
+  ));
+  const end = jobEnd < 0 ? lines.length : jobEnd;
+  const stepsIndexes = lines.flatMap((line, index) => (
+    index > jobIndex && index < end && line === "    steps:" ? [index] : []
+  ));
+  if (stepsIndexes.length !== 1) {
+    return { blocks: [], problems: [`jobs.${jobName} must define exactly one steps list`] };
+  }
+  const stepLines = lines.slice(stepsIndexes[0] + 1, end);
+  const starts = stepLines.flatMap((line, index) => (
+    /^ {6}-\s+\S/.test(line) ? [index] : []
+  ));
+  const blocks = starts.map((start, index) => (
+    stepLines.slice(start, starts[index + 1] ?? stepLines.length)
+  ));
+  const prefix = stepLines.slice(0, starts[0] ?? stepLines.length);
+  const problems = prefix.some((line) => line.trim())
+    ? [`jobs.${jobName}.steps contains content outside a step`]
+    : [];
+  return { blocks, problems };
+}
+
+function parseNestedMapping(lines, field, stepName) {
+  const mapping = {};
+  const problems = [];
+  for (const line of lines) {
+    if (!line.trim() || line.trim().startsWith("#")) {
+      continue;
+    }
+    const match = line.match(/^ {10}([A-Za-z][A-Za-z0-9_-]*):\s*(\S.*?)\s*$/);
+    if (!match || Object.hasOwn(mapping, match?.[1])) {
+      problems.push(`Step "${stepName}" has an invalid ${field} mapping`);
+      continue;
+    }
+    mapping[match[1]] = match[2];
+  }
+  return { mapping, problems };
+}
+
+function parseStepBlock(block, ordinal) {
+  const firstLine = block[0]?.match(/^ {6}-\s+(.+)$/)?.[1] ?? "";
+  const lines = [`        ${firstLine}`, ...block.slice(1)];
+  const fields = {};
+  const problems = [];
+  for (let index = 0; index < lines.length;) {
+    const line = lines[index];
+    if (!line.trim() || line.trim().startsWith("#")) {
+      index += 1;
+      continue;
+    }
+    const match = line.match(/^ {8}([A-Za-z][A-Za-z0-9_-]*):(?:\s*(.*?))?\s*$/);
+    if (!match || Object.hasOwn(fields, match?.[1])) {
+      problems.push(`Pages validate step ${ordinal} contains invalid or duplicate fields`);
+      index += 1;
+      continue;
+    }
+    const [, key, value = ""] = match;
+    let end = index + 1;
+    while (end < lines.length && (!lines[end].trim() || lineIndent(lines[end]) > 8)) {
+      end += 1;
+    }
+    const nestedLines = lines.slice(index + 1, end);
+    if (value === "|") {
+      const invalidIndent = nestedLines.some((nested) => (
+        nested.trim() && lineIndent(nested) < 10
+      ));
+      if (invalidIndent) {
+        problems.push(`Step "${fields.name ?? ordinal}" has an invalid run block`);
+      }
+      fields[key] = {
+        style: "block",
+        lines: nestedLines.filter((nested) => nested.trim()).map((nested) => nested.slice(10)),
+      };
+    } else if (nestedLines.some((nested) => nested.trim())) {
+      if (value) {
+        problems.push(`Step "${fields.name ?? ordinal}" has unexpected nested content`);
+        fields[key] = value;
+      } else {
+        const parsed = parseNestedMapping(nestedLines, key, fields.name ?? ordinal);
+        fields[key] = parsed.mapping;
+        problems.push(...parsed.problems);
+      }
+    } else {
+      fields[key] = key === "run" ? { style: "scalar", value } : value;
+    }
+    index = end;
+  }
+  return { fields, problems };
+}
+
+function sortedStructure(value) {
+  if (Array.isArray(value)) {
+    return value.map(sortedStructure);
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.keys(value).sort().map((key) => [key, sortedStructure(value[key])]),
+    );
+  }
+  return value;
+}
+
+function validatePagesValidateAllowlist(source) {
+  const parsedJob = jobStepBlocks(source, "validate");
+  const parsedSteps = parsedJob.blocks.map((block, index) => parseStepBlock(block, index + 1));
+  const problems = [
+    ...parsedJob.problems,
+    ...parsedSteps.flatMap((step) => step.problems),
+  ];
+  if (parsedSteps.length !== PAGES_VALIDATE_STEPS.length) {
+    problems.push(
+      "Pages validate job must contain exactly the 11 allowlisted steps; "
+      + `found ${parsedSteps.length}`,
+    );
+  }
+  const comparedSteps = Math.max(parsedSteps.length, PAGES_VALIDATE_STEPS.length);
+  for (let index = 0; index < comparedSteps; index += 1) {
+    const actual = sortedStructure(parsedSteps[index]?.fields);
+    const expected = sortedStructure(PAGES_VALIDATE_STEPS[index]);
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+      problems.push(
+        `Pages validate step ${index + 1} is not allowlisted and may mutate the artifact; `
+        + `expected "${PAGES_VALIDATE_STEPS[index]?.name ?? "no step"}"`,
+      );
+    }
+  }
+  return problems;
+}
+
 function runCommands(step) {
   const commands = [];
   const lines = step.lines;
@@ -181,18 +387,6 @@ function validateBuildAndBrowserChain(steps, kind) {
     if (!uploadStep.lines.some((line) => /^\s*path:\s*_site\s*$/.test(line))) {
       problems.push("Pages upload must target the attested _site directory only");
     }
-    for (let index = snapshotIndex + 1; index < uploadIndex; index += 1) {
-      const commands = runCommands(steps[index]);
-      const allowed = commands.length === 1 && [
-        "npm run test:e2e",
-        "node scripts/attest-artifact.mjs verify",
-      ].includes(commands[0]);
-      if (!allowed || actionUse(steps[index])) {
-        problems.push(
-          `Step "${steps[index].name}" may mutate the artifact between attestation and upload`,
-        );
-      }
-    }
   }
   return problems;
 }
@@ -212,6 +406,7 @@ export function workflowPolicyProblems(source, kind) {
   const problems = [
     ...validateActionPins(source, requiredActions),
     ...validateBuildAndBrowserChain(steps, kind),
+    ...(kind === "pages" ? validatePagesValidateAllowlist(source) : []),
   ];
   if (source.includes("continue-on-error: true")) {
     problems.push("Release gates must not continue on error");

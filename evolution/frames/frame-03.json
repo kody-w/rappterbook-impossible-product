@@ -83,7 +83,7 @@
     }
   ],
   "consensus": {
-    "scoringMethod": "Each of eight strategy audits scored every candidate from 1 (do not ship) to 5 (essential now). Totals are unweighted sums out of 40. The three highest candidates at or above 32 were selected; minority transfer and collaboration candidates remain evidence only.",
+    "scoringMethod": "Each of eight strategy audits scored every candidate from 1 (do not ship) to 5 (essential now). Totals are derived as unweighted sums out of 40 and ranked descending. Equal totals are broken by the number of essential (5) votes, then candidate ID. The three highest candidates at or above 32 were selected; minority transfer and collaboration candidates remain evidence only.",
     "selectionThreshold": 32,
     "maximumScore": 40,
     "candidateScores": [
@@ -109,16 +109,16 @@
         "selected": true
       },
       {
-        "id": "encrypted-offline-transfer",
-        "auditVotes": [1, 2, 2, 2, 2, 4, 2, 2],
-        "total": 17,
+        "id": "tamper-evident-collaboration",
+        "auditVotes": [1, 2, 2, 3, 2, 3, 5, 2],
+        "total": 20,
         "rank": 4,
         "selected": false
       },
       {
-        "id": "tamper-evident-collaboration",
-        "auditVotes": [1, 2, 2, 3, 2, 3, 5, 2],
-        "total": 20,
+        "id": "encrypted-offline-transfer",
+        "auditVotes": [1, 2, 2, 2, 2, 4, 2, 2],
+        "total": 17,
         "rank": 5,
         "selected": false
       }
@@ -207,9 +207,19 @@
         "evidence": "unit/static suite and automatic Chromium request/pageerror/console/overflow guards"
       },
       {
-        "criterion": "Pages deploys the same built _site bytes tested by Chromium with non-self-referential provenance.",
-        "status": "passed",
-        "evidence": "deployment digest test, single-build Pages workflow, and generated provenance.json"
+        "criterion": "Pages builds _site once, tests that exact directory, and rejects any byte change before upload.",
+        "status": "enforced",
+        "evidence": "full-artifact attestation before Chromium, byte verification after Chromium and immediately before the _site-only upload, plus mutation tests that reject a post-Chromium rebuild"
+      },
+      {
+        "criterion": "A required post-deploy job compares the live SHA, tree, run identity, content digest, provenance bytes, and every manifest asset hash with the uploaded Pages artifact.",
+        "status": "enforced",
+        "evidence": "retrying same-run artifact versus live verifier with manual redirect handling; the mutable run result remains the source of truth"
+      },
+      {
+        "criterion": "Provenance fails closed and release dependencies are immutable.",
+        "status": "enforced",
+        "evidence": "fake, mismatched, missing-git, and correct SHA/tree tests; every direct third-party action is pinned to a reviewed 40-hex commit"
       }
     ]
   },
@@ -235,11 +245,11 @@
   "tests": {
     "unitAndStaticCommand": "npm test",
     "browserCommand": "npm run test:e2e",
-    "status": "passed locally; both commands remain mandatory deployment gates",
-    "unitAndDeploymentPassed": 54,
+    "status": "66 unit/deployment/release-contract tests and static checks pass locally; 15 browser tests remain mandatory gates, followed by required live verification",
+    "unitAndDeploymentPassed": 66,
     "browserPassed": 15,
     "failed": 0,
-    "recordedAt": "2026-07-12T04:22:43Z",
+    "recordedAt": "2026-07-12T05:03:43Z",
     "artifactUnderTest": "_site",
     "requiredCoverage": [
       "all routes and proof patterns",
@@ -254,7 +264,11 @@
       "320px at 200% text",
       "keyboard focus",
       "page and console errors",
-      "built deployment parity"
+      "built deployment parity",
+      "fail-closed commit and tree provenance",
+      "post-test artifact immutability",
+      "workflow rebuild mutation rejection",
+      "post-deploy every-asset verification"
     ]
   },
   "release": {
@@ -263,11 +277,21 @@
     "pagesWorkflow": ".github/workflows/pages.yml",
     "testWorkflow": ".github/workflows/test.yml",
     "currentDeploymentSourceOfTruth": "/provenance.json",
-    "generatedProvenanceMechanism": "scripts/build.mjs copies source into _site, hashes every artifact file except provenance.json, computes a sorted path-plus-file-hash SHA-256 tree digest, then writes the build GITHUB_SHA, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT, timestamp, git tree SHA, file hashes, and aggregate digest. The frame record intentionally does not self-claim the mutable implementation SHA or run URL."
+    "generatedProvenanceMechanism": "scripts/build.mjs first performs fail-closed validation that GITHUB_SHA is exactly 40 lowercase hex, resolves as a commit and tree in this checkout, and equals Git HEAD; missing git or tree lookup is fatal. It then copies source into _site, hashes every artifact file except provenance.json, computes a sorted path-plus-file-hash SHA-256 content digest, and writes the verified SHA, tree, run identity, timestamp, per-file hashes, and digest. The frame record intentionally does not self-claim a mutable implementation SHA or run URL.",
+    "releaseGateRepair": {
+      "scope": "Frame 3 release integrity only; Frame 4 was not started and no product mutation was added.",
+      "rejectedCommitSha": "d4ae3e87b11007a7220be2d43b22ab6abc4d86e9",
+      "rejection": "Independent verification rejected fail-open provenance, post-test rebuild exposure, missing live hash verification, inconsistent consensus ordering, and mutable action tags.",
+      "sameArtifactPolicy": "CI builds _site exactly once, snapshots all bytes, tests only that directory, verifies it twice, and uploads only the attested directory. Static policy rejects any unapproved command between attestation and upload.",
+      "postDeployPolicy": "The required verify-live job downloads the exact github-pages artifact from the same run and retries live byte/hash comparison for Pages propagation. Missing assets, drift, or any redirect fail the workflow.",
+      "durableReleaseTarget": "https://github.com/kody-w/rappterbook-impossible-product/releases/tag/frame-03",
+      "cryptographicSigning": "No project signing identity is configured. Provenance is hash-verifiable but unsigned; no cryptographic signature is claimed."
+    }
   },
   "timestamps": {
     "frameStartedAt": "2026-07-12T03:53:05.752Z",
     "strategyEvidenceCapturedAt": "2026-07-12T04:20:00.000Z",
-    "localValidationCompletedAt": "2026-07-12T04:22:43Z"
+    "localValidationCompletedAt": "2026-07-12T04:22:43Z",
+    "releaseGateRepairValidatedLocallyAt": "2026-07-12T05:03:43Z"
   }
 }

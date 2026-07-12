@@ -41,7 +41,7 @@ Data is local to this browser profile on this device, **not universally private*
 
 ```bash
 npm ci
-npm run build
+npm run build:local
 node scripts/serve.mjs
 ```
 
@@ -52,20 +52,26 @@ Open <http://127.0.0.1:4173>.
 Node.js 20 or newer is required.
 
 ```bash
-# 54 domain/deployment tests plus static release invariants
+# 66 domain/deployment/release-contract tests plus static release invariants
 npm test
 
-# 15 real Chromium built-artifact journeys
-npm run test:e2e
+# Build once in explicit trusted local mode, then run 15 Chromium journeys
+npm run test:e2e:local
 
-# Syntax and static Pages artifact
+# Syntax and an explicit local static Pages artifact
 npm run check
-npm run build
+npm run build:local
 ```
 
 `@playwright/test` is the only dependency, pinned exactly at `1.61.1`; it is development-only. Browser gates cover all routes, action timestamps, nullable confidence, untimed and active-effort pacing, unsafe outbound fixtures, branch interpretation, decisions, duplicate/contradiction synthesis, migration, 320px at 200% text, keyboard focus, page/console errors, multi-tab behavior, and third-party requests.
 
-`npm run build` writes `_site/provenance.json` after copying the artifact. Provenance contains the exact source SHA, Actions run ID/attempt, build timestamp, git tree SHA, per-file SHA-256 hashes, and a deterministic aggregate artifact-tree digest. `provenance.json` excludes itself, avoiding self-referential stale claims. Pages uploads the same `_site` directory Chromium tested and does not rebuild it.
+`npm run build` is the fail-closed CI build. It rejects a missing, malformed, unresolvable, or non-HEAD `GITHUB_SHA`, a missing Git executable, and any failed commit/tree lookup. `TRUSTED_LOCAL_BUILD=1` is available only through `npm run build:local` and is rejected when CI is active.
+
+The build writes `_site/provenance.json` with the exact source SHA, Actions run ID/attempt, build timestamp, git tree SHA, per-file SHA-256 hashes, and a deterministic content digest. `provenance.json` excludes itself, avoiding self-reference.
+
+Both workflows build `_site` exactly once before Chromium. They snapshot every artifact byte, test only `_site`, and verify immutability after tests. Pages verifies a second time immediately before uploading only `_site`; static policy tests reject a rebuild or filesystem mutation in that interval. A required job then downloads that exact Pages artifact and retries live comparison of provenance plus every manifest asset hash without following redirects.
+
+After the repaired gate passes, the exact Pages artifact is retained at the [`frame-03` release](https://github.com/kody-w/rappterbook-impossible-product/releases/tag/frame-03). No signing identity is configured, so this is hash-verifiable unsigned provenance—not a claimed cryptographic signature. The repair changes release integrity only: Frame 4 remains pending and no fourth Frame 3 product mutation was added.
 
 ## Architecture
 
@@ -78,7 +84,8 @@ npm run build
 | `tests/release.spec.mjs` | Built `_site` Chromium journeys with pageerror, console, network-origin, focus, and overflow guards |
 | `evolution/strategies/frame-03/` | Eight distinct raw Frame 3 strategy audits, including retained minority proposals |
 | `evolution/frames/frame-03.json` | Transparent scoring, exactly three selected mutations, acceptance, local metrics, tests, and provenance policy |
-| `.github/workflows/` | Locked tests and browser contract before validation/deployment |
+| `scripts/provenance.mjs`, `scripts/attest-artifact.mjs`, `scripts/verify-live.mjs` | Fail-closed source identity, full-byte artifact attestation, and post-deploy every-asset verification |
+| `.github/workflows/` | SHA-pinned tests, single-build artifact contract, Pages deployment, and required live verification |
 
 ## Evolution protocol
 

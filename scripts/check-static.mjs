@@ -2,6 +2,9 @@ import { access, readFile, readdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { consensusProblems } from "./consensus.mjs";
+import { workflowPolicyProblems } from "./release-policy.mjs";
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (path) => readFile(resolve(root, path), "utf8");
 const [
@@ -15,6 +18,9 @@ const [
   timeline,
   packageJson,
   buildScript,
+  provenanceScript,
+  attestationScript,
+  liveVerifier,
   serverScript,
 ] = await Promise.all([
   read("index.html"),
@@ -27,6 +33,9 @@ const [
   read("evolution/timeline.json").then(JSON.parse),
   read("package.json").then(JSON.parse),
   read("scripts/build.mjs"),
+  read("scripts/provenance.mjs"),
+  read("scripts/attest-artifact.mjs"),
+  read("scripts/verify-live.mjs"),
   read("scripts/serve.mjs"),
 ]);
 const failures = [];
@@ -72,6 +81,14 @@ check(
     (candidate) => candidate.total === candidate.auditVotes.reduce((sum, vote) => sum + vote, 0),
   ),
   "Frame 3 consensus totals must equal transparent audit votes.",
+);
+for (const problem of consensusProblems(frameThree)) {
+  failures.push(`Frame 3 ${problem}`);
+}
+check(
+  frameThree.consensus.candidateScores.findIndex((candidate) => candidate.total === 20)
+    < frameThree.consensus.candidateScores.findIndex((candidate) => candidate.total === 17),
+  "Frame 3 score 20 must rank above score 17.",
 );
 check(
   frameThree.baseline.acceptedLiveCommitSha
@@ -153,16 +170,32 @@ check(
   "Playwright must be pinned exactly for reproducible release tests.",
 );
 check(
-  packageJson.scripts?.["test:e2e"]?.includes("npm run build"),
-  "Browser tests must build the artifact before opening it.",
+  packageJson.scripts?.["test:e2e"] === "playwright test",
+  "Browser tests must consume the prebuilt artifact without rebuilding it.",
 );
 check(
-  buildScript.includes("provenance.json")
-    && buildScript.includes("GITHUB_SHA")
-    && buildScript.includes("GITHUB_RUN_ID")
-    && buildScript.includes("GITHUB_RUN_ATTEMPT")
-    && buildScript.includes("contentDigest"),
-  "Build must emit deployed provenance and a deterministic content digest.",
+  packageJson.scripts?.["build:local"]?.includes("TRUSTED_LOCAL_BUILD=1"),
+  "Local builds must opt into explicit trusted local mode.",
+);
+check(
+  buildScript.includes("resolveBuildIdentity")
+    && buildScript.includes("provenance.json")
+    && buildScript.includes("contentDigest")
+    && provenanceScript.includes("does not equal Git HEAD")
+    && provenanceScript.includes("Required git lookup failed")
+    && provenanceScript.includes("TRUSTED_LOCAL_BUILD is forbidden in CI"),
+  "Build provenance must fail closed on SHA, HEAD, tree, and git lookup errors.",
+);
+check(
+  attestationScript.includes("manifestDirectory")
+    && attestationScript.includes("assertSameManifest"),
+  "Release attestation must snapshot and compare the complete artifact.",
+);
+check(
+  liveVerifier.includes('redirect: "manual"')
+    && liveVerifier.includes("Live asset hash drift")
+    && liveVerifier.includes("digestManifest(fetchedFiles)"),
+  "Live verification must reject redirects and hash every manifest asset.",
 );
 check(
   serverScript.includes('resolve(repositoryRoot, "_site")'),
@@ -183,7 +216,7 @@ check(
 );
 check(
   frameThree.release.currentDeploymentSourceOfTruth === "/provenance.json"
-    && frameThree.release.generatedProvenanceMechanism.includes("tree digest")
+    && frameThree.release.generatedProvenanceMechanism.includes("fail-closed")
     && !Object.hasOwn(frameThree.release, "implementationCommitSha")
     && !Object.hasOwn(frameThree.release, "pagesWorkflowRunUrl"),
   "Frame 3 must defer mutable deployment identity to generated provenance.",
@@ -207,22 +240,12 @@ const [testWorkflow, pagesWorkflow] = await Promise.all([
   read(".github/workflows/test.yml"),
   read(".github/workflows/pages.yml"),
 ]);
-check(testWorkflow.includes("npm run test:e2e"), "Test workflow must block on the browser contract.");
-check(pagesWorkflow.includes("npm run test:e2e"), "Pages validation must block on the browser contract.");
-check(
-  pagesWorkflow.indexOf("npm run test:e2e")
-    < pagesWorkflow.indexOf("actions/upload-pages-artifact@v3"),
-  "Pages must upload only after browser tests pass.",
-);
-check(
-  pagesWorkflow.indexOf("actions/upload-pages-artifact@v3")
-    < pagesWorkflow.indexOf("actions/deploy-pages@v4"),
-  "Pages must deploy the already-tested uploaded artifact.",
-);
-check(
-  !pagesWorkflow.includes("node scripts/build.mjs"),
-  "Pages deploy job must not rebuild after the browser-tested artifact is uploaded.",
-);
+for (const problem of workflowPolicyProblems(testWorkflow, "test")) {
+  failures.push(`Test workflow policy: ${problem}`);
+}
+for (const problem of workflowPolicyProblems(pagesWorkflow, "pages")) {
+  failures.push(`Pages workflow policy: ${problem}`);
+}
 
 if (failures.length > 0) {
   failures.forEach((failure) => console.error(`FAIL: ${failure}`));

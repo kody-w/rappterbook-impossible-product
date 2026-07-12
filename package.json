@@ -6,8 +6,10 @@
   "description": "A local-first compiler for safe, decision-grade belief probes.",
   "scripts": {
     "test": "node --test tests/*.test.mjs && node scripts/check-static.mjs",
-    "test:e2e": "npm run build && playwright test",
+    "test:e2e": "playwright test",
+    "test:e2e:local": "npm run build:local && npm run test:e2e",
     "build": "node scripts/build.mjs",
+    "build:local": "TRUSTED_LOCAL_BUILD=1 node scripts/build.mjs",
     "check": "node --check src/core.mjs && node --check src/app.mjs && node --check scripts/*.mjs"
   },
   "engines": {

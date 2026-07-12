@@ -17,9 +17,11 @@ jobs:
       TMPDIR: ${{ github.workspace }}/.runtime-tmp
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 2
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -36,5 +38,11 @@ jobs:
         run: npm test
       - name: Install locked Chromium
         run: npx playwright install --with-deps chromium
+      - name: Build the browser-tested artifact once
+        run: npm run build
+      - name: Snapshot the browser-tested artifact
+        run: node scripts/attest-artifact.mjs snapshot
       - name: Run browser release contract
         run: npm run test:e2e
+      - name: Verify artifact immutability after browser tests
+        run: node scripts/attest-artifact.mjs verify

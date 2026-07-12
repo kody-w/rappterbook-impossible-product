@@ -1,4 +1,9 @@
 _site/
+.release-attestation.json
+.release-contract-tests/
+.release-assets/
+.pages-artifact/
+_expected-site/
 .DS_Store
 node_modules/
 .npm-cache/

@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
   pages: write
   id-token: write
@@ -22,9 +23,11 @@ jobs:
       TMPDIR: ${{ github.workspace }}/.runtime-tmp
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 2
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
           cache: npm
@@ -36,22 +39,59 @@ jobs:
         run: npm test
       - name: Install locked Chromium
         run: npx playwright install --with-deps chromium
+      - name: Build the browser-tested Pages artifact once
+        run: npm run build
+      - name: Snapshot the browser-tested Pages artifact
+        run: node scripts/attest-artifact.mjs snapshot
       - name: Run browser release contract
         run: npm run test:e2e
+      - name: Verify artifact immutability after browser tests
+        run: node scripts/attest-artifact.mjs verify
+      - name: Verify artifact immutability immediately before upload
+        run: node scripts/attest-artifact.mjs verify
       - name: Upload the tested Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
           path: _site
 
   deploy:
     needs: validate
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       - name: Deploy the tested Pages artifact
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
+
+  verify-live:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the deployed source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 2
+      - name: Use Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Download the exact Pages artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: github-pages
+          path: .pages-artifact
+      - name: Extract the exact Pages artifact
+        run: |
+          mkdir -p _expected-site
+          tar --extract --file .pages-artifact/artifact.tar --directory _expected-site
+      - name: Verify every live byte and provenance field
+        env:
+          DEPLOYED_URL: ${{ needs.deploy.outputs.page_url }}
+        run: node scripts/verify-live.mjs

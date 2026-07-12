@@ -113,7 +113,12 @@ async function assertNoHorizontalOverflow(page, stateName) {
           || rectangle.left < -1;
       })
       .map((node) => ({
+        className: node.className,
+        clientWidth: node.clientWidth,
         id: node.id,
+        left: Math.round(node.getBoundingClientRect().left),
+        right: Math.round(node.getBoundingClientRect().right),
+        scrollWidth: node.scrollWidth,
         tag: node.tagName,
         width: Math.round(node.getBoundingClientRect().width),
       }))

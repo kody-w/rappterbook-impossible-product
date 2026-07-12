@@ -262,10 +262,10 @@
   },
   "release": {
     "baselineCommitSha": "64e9b9f2a6e01ae810fc2d43e9fe95f7bb3f9d63",
-    "implementationCommitSha": null,
+    "implementationCommitSha": "1a370c15935fafc10c2f19d447ac69a96d1514c8",
     "firstVerifiedDeploymentCommitSha": null,
     "deployedUrl": "https://kody-w.github.io/rappterbook-impossible-product/",
-    "deploymentStatus": "pending",
+    "deploymentStatus": "awaiting-workflow-verification",
     "pagesWorkflow": ".github/workflows/pages.yml",
     "testWorkflow": ".github/workflows/test.yml",
     "pagesWorkflowRunUrl": null,

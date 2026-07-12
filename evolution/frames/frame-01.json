@@ -165,9 +165,13 @@
   },
   "release": {
     "implementationCommitSha": "2ad9e0696fd049ed5ce4aa1d82fb8947a46e236e",
+    "firstVerifiedDeploymentCommitSha": "5ccd53ea4696d0d05ef146814a02280a850a98ba",
     "deployedUrl": "https://kody-w.github.io/rappterbook-impossible-product/",
-    "deploymentStatus": "Pages configured for workflow deployment; initial workflow pending",
-    "pagesWorkflow": ".github/workflows/pages.yml"
+    "deploymentStatus": "verified",
+    "verifiedAt": "2026-07-12T02:13:13Z",
+    "pagesWorkflow": ".github/workflows/pages.yml",
+    "pagesWorkflowRunUrl": "https://github.com/kody-w/rappterbook-impossible-product/actions/runs/29176424188",
+    "testWorkflowRunUrl": "https://github.com/kody-w/rappterbook-impossible-product/actions/runs/29176424137"
   },
   "timestamp": "2026-07-12T02:03:31.976Z"
 }

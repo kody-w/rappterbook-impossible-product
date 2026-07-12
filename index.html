@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Proof of Possible turns an overwhelming goal into one small, falsifiable proof sprint. Private and local-first.">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>Proof of Possible</title>
+  <link rel="icon" href="./assets/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./src/app.mjs"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="Proof of Possible home">
+      <img src="./assets/mark.svg" width="36" height="36" alt="">
+      <span>Proof of Possible</span>
+    </a>
+    <p class="privacy-chip"><span aria-hidden="true">●</span> Private on this device</p>
+  </header>
+
+  <main id="main-content">
+    <section class="hero" aria-labelledby="hero-title">
+      <p class="eyebrow">One honest test. Not a motivational speech.</p>
+      <h1 id="hero-title">Turn “impossible” into evidence.</h1>
+      <p class="hero-copy">Name the real constraint, run one proof sprint of ten minutes or less, and record what reality says. Completed, attempted, and blocked are all useful evidence.</p>
+      <div class="principle" role="note">
+        <strong>A blocked result is valid.</strong>
+        <span>This tool will not pretend effort can erase money, access, safety, discrimination, disability, care duties, or other structural constraints.</span>
+      </div>
+    </section>
+
+    <noscript>
+      <p class="notice error-notice">Proof of Possible needs JavaScript to keep your private plan and timer on this device. No data is sent to a server.</p>
+    </noscript>
+
+    <div id="storage-warning" class="notice error-notice" role="status" hidden>
+      Local storage is unavailable. You can use this tab, but your work may not survive a reload.
+    </div>
+    <div id="recovery-warning" class="notice" role="status" hidden>
+      Stored data could not be read, so the app recovered with a clean local state.
+    </div>
+    <p id="app-status" class="sr-only" aria-live="polite"></p>
+
+    <section class="metrics-section" aria-labelledby="metrics-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Your evidence loop</p>
+          <h2 id="metrics-title">First-Evidence Rate</h2>
+        </div>
+        <p class="metric-definition">Goals with a recorded outcome ÷ goals created</p>
+      </div>
+      <div class="metric-grid">
+        <article class="metric-card metric-primary">
+          <span id="metric-rate" class="metric-value">0%</span>
+          <span id="metric-ratio" class="metric-label">0 outcomes / 0 goals</span>
+        </article>
+        <article class="metric-card">
+          <span id="metric-goals" class="metric-value">0</span>
+          <span class="metric-label">Goals created</span>
+        </article>
+        <article class="metric-card">
+          <span id="metric-outcomes" class="metric-value">0</span>
+          <span class="metric-label">Outcomes recorded</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="workspace" aria-label="Proof workflow">
+      <ol class="stepper" aria-label="Workflow steps">
+        <li data-step="intake"><span>1</span> Name it</li>
+        <li data-step="review"><span>2</span> Compress it</li>
+        <li data-step="sprint"><span>3</span> Run proof</li>
+        <li data-step="receipt"><span>4</span> Record evidence</li>
+      </ol>
+
+      <section id="intake-panel" class="flow-panel" aria-labelledby="intake-title">
+        <div class="panel-heading">
+          <p class="eyebrow">Step 1 · Name + compress</p>
+          <h2 id="intake-title" tabindex="-1">What feels impossible right now?</h2>
+          <p>Be concrete enough that ten minutes in the real world could teach you something.</p>
+        </div>
+
+        <form id="intake-form" novalidate>
+          <div id="intake-errors" class="error-summary" role="alert" tabindex="-1" hidden>
+            <h3>Fix these fields</h3>
+            <ul></ul>
+          </div>
+
+          <div class="field">
+            <label for="goal">Goal</label>
+            <span class="field-hint" id="goal-hint">What do you want to make true? Avoid a vague category like “be successful.”</span>
+            <textarea id="goal" name="goal" rows="2" maxlength="240" required aria-describedby="goal-hint goal-error"></textarea>
+            <span class="field-error" id="goal-error"></span>
+          </div>
+
+          <div class="field">
+            <label for="why">Why it matters</label>
+            <span class="field-hint" id="why-hint">What changes if you learn this is possible—or not yet possible?</span>
+            <textarea id="why" name="why" rows="2" maxlength="400" required aria-describedby="why-hint why-error"></textarea>
+            <span class="field-error" id="why-error"></span>
+          </div>
+
+          <div class="field">
+            <label for="obstacle">Binding obstacle or constraint</label>
+            <span class="field-hint" id="obstacle-hint">Name the bottleneck you cannot wish away: access, time, money, skill, safety, permission, energy, or something else.</span>
+            <textarea id="obstacle" name="obstacle" rows="3" maxlength="400" required aria-describedby="obstacle-hint obstacle-error"></textarea>
+            <span class="field-error" id="obstacle-error"></span>
+          </div>
+
+          <div class="field">
+            <label for="proof">Observable proof</label>
+            <span class="field-hint" id="proof-hint">What could you see, count, open, send, ask, or receive? State a signal, not a feeling.</span>
+            <textarea id="proof" name="proof" rows="3" maxlength="300" required aria-describedby="proof-hint proof-error"></textarea>
+            <span class="field-error" id="proof-error"></span>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="timeboxMinutes">Proof sprint</label>
+              <span class="field-hint" id="timebox-hint">Capped at ten minutes by design.</span>
+              <select id="timeboxMinutes" name="timeboxMinutes" aria-describedby="timebox-hint timeboxMinutes-error">
+                <option value="1">1 minute</option>
+                <option value="2">2 minutes</option>
+                <option value="3">3 minutes</option>
+                <option value="4">4 minutes</option>
+                <option value="5" selected>5 minutes</option>
+                <option value="6">6 minutes</option>
+                <option value="7">7 minutes</option>
+                <option value="8">8 minutes</option>
+                <option value="9">9 minutes</option>
+                <option value="10">10 minutes</option>
+              </select>
+              <span class="field-error" id="timeboxMinutes-error"></span>
+            </div>
+
+            <div class="field">
+              <label for="baselineConfidence">Confidence before the test</label>
+              <span class="field-hint" id="baseline-hint">0 = no confidence, 100 = certain.</span>
+              <div class="number-suffix">
+                <input id="baselineConfidence" name="baselineConfidence" type="number" min="0" max="100" step="1" value="30" inputmode="numeric" required aria-describedby="baseline-hint baselineConfidence-error">
+                <span aria-hidden="true">%</span>
+              </div>
+              <span class="field-error" id="baselineConfidence-error"></span>
+            </div>
+          </div>
+
+          <button class="button button-primary" type="submit">Create one proof mission</button>
+        </form>
+      </section>
+
+      <section id="review-panel" class="flow-panel" aria-labelledby="review-title" hidden>
+        <div class="panel-heading">
+          <p class="eyebrow">Step 2 · Inspect before you run</p>
+          <h2 id="review-title" tabindex="-1">Your smallest falsifiable mission</h2>
+          <p>This plan is generated deterministically from your words. Edit it until success and stopping are unambiguous.</p>
+        </div>
+
+        <div id="review-context" class="constraint-card"></div>
+
+        <form id="review-form" novalidate>
+          <div id="review-errors" class="error-summary" role="alert" tabindex="-1" hidden>
+            <h3>Make the mission runnable</h3>
+            <ul></ul>
+          </div>
+          <div class="field">
+            <label for="mission">Mission</label>
+            <textarea id="mission" name="mission" rows="5" maxlength="600" required aria-describedby="mission-error"></textarea>
+            <span class="field-error" id="mission-error"></span>
+          </div>
+          <div class="field">
+            <label for="successCriterion">Observable success</label>
+            <textarea id="successCriterion" name="successCriterion" rows="3" maxlength="400" required aria-describedby="successCriterion-error"></textarea>
+            <span class="field-error" id="successCriterion-error"></span>
+          </div>
+          <div class="field">
+            <label for="stopCondition">Stop condition</label>
+            <textarea id="stopCondition" name="stopCondition" rows="2" maxlength="400" required aria-describedby="stopCondition-error"></textarea>
+            <span class="field-error" id="stopCondition-error"></span>
+          </div>
+          <div class="action-row">
+            <button class="button button-primary" type="submit">Start proof sprint</button>
+            <span class="inline-note">The wall-clock timer starts immediately and cannot pause.</span>
+          </div>
+        </form>
+      </section>
+
+      <section id="sprint-panel" class="flow-panel sprint-panel" aria-labelledby="sprint-title" hidden>
+        <div class="panel-heading">
+          <p class="eyebrow">Step 3 · One proof sprint</p>
+          <h2 id="sprint-title" tabindex="-1">Run the mission, not the whole dream.</h2>
+        </div>
+
+        <div class="timer-block">
+          <p class="timer-label">Wall-clock time remaining</p>
+          <time id="sprint-timer" class="timer" role="timer" aria-label="Time remaining">00:00</time>
+          <p id="timer-note">No pause: this deadline keeps running across reloads and closed tabs.</p>
+        </div>
+
+        <article class="mission-card" aria-labelledby="active-mission-label">
+          <p class="card-label" id="active-mission-label">Current mission</p>
+          <p id="active-mission" class="mission-text"></p>
+          <dl>
+            <div>
+              <dt>Observable success</dt>
+              <dd id="active-success"></dd>
+            </div>
+            <div>
+              <dt>Stop condition</dt>
+              <dd id="active-stop"></dd>
+            </div>
+          </dl>
+        </article>
+
+        <details id="simplify-details" class="simplify-box">
+          <summary>Mission is infeasible? Halve or simplify it</summary>
+          <p>The original stays on the receipt. The deadline does not restart. Make the next action smaller without pretending the constraint disappeared.</p>
+          <form id="simplify-form" novalidate>
+            <div id="simplify-errors" class="error-summary" role="alert" tabindex="-1" hidden>
+              <h3>Fix the simplification</h3>
+              <ul></ul>
+            </div>
+            <div class="field">
+              <label for="simplifiedMission">Smaller mission</label>
+              <textarea id="simplifiedMission" name="mission" rows="5" maxlength="600" required aria-describedby="simplifiedMission-error"></textarea>
+              <span class="field-error" id="simplifiedMission-error"></span>
+            </div>
+            <div class="field">
+              <label for="simplifiedSuccess">Smaller observable success</label>
+              <textarea id="simplifiedSuccess" name="successCriterion" rows="3" maxlength="400" required aria-describedby="simplifiedSuccess-error"></textarea>
+              <span class="field-error" id="simplifiedSuccess-error"></span>
+            </div>
+            <div class="field">
+              <label for="simplifiedStop">Stop condition</label>
+              <textarea id="simplifiedStop" name="stopCondition" rows="2" maxlength="400" required aria-describedby="simplifiedStop-error"></textarea>
+              <span class="field-error" id="simplifiedStop-error"></span>
+            </div>
+            <div class="field">
+              <label for="simplifyReason">Why this changed</label>
+              <input id="simplifyReason" name="reason" type="text" maxlength="240" required placeholder="Example: the account approval is outside my control" aria-describedby="simplifyReason-error">
+              <span class="field-error" id="simplifyReason-error"></span>
+            </div>
+            <div class="action-row">
+              <button id="suggest-smaller" class="button button-secondary" type="button">Suggest a smaller slice</button>
+              <button class="button button-primary" type="submit">Use this mission</button>
+            </div>
+          </form>
+        </details>
+
+        <section id="provenance-section" class="provenance" aria-labelledby="provenance-title" hidden>
+          <h3 id="provenance-title">Mission provenance</h3>
+          <ol id="provenance-list"></ol>
+        </section>
+
+        <button id="open-outcome" class="button button-primary button-wide" type="button">Record what happened</button>
+      </section>
+
+      <section id="outcome-panel" class="flow-panel" aria-labelledby="outcome-title" hidden>
+        <div class="panel-heading">
+          <p class="eyebrow">Step 4 · Evidence receipt</p>
+          <h2 id="outcome-title" tabindex="-1">What did reality say?</h2>
+          <p>The timer is still running until you record an outcome. “Blocked” is information, not failure.</p>
+        </div>
+        <p class="outcome-clock">Time remaining: <time id="outcome-timer">00:00</time></p>
+
+        <form id="outcome-form" novalidate>
+          <div id="outcome-errors" class="error-summary" role="alert" tabindex="-1" hidden>
+            <h3>Complete the evidence receipt</h3>
+            <ul></ul>
+          </div>
+
+          <fieldset class="status-options">
+            <legend>Outcome</legend>
+            <label><input id="status-completed" type="radio" name="status" value="completed"> <span><strong>Completed</strong>Observable proof was produced.</span></label>
+            <label><input type="radio" name="status" value="attempted"> <span><strong>Attempted</strong>You ran the test; the signal was absent or inconclusive.</span></label>
+            <label><input type="radio" name="status" value="blocked"> <span><strong>Blocked</strong>A real constraint prevented the test or result.</span></label>
+          </fieldset>
+          <span class="field-error" id="status-error"></span>
+
+          <div class="field">
+            <label for="evidenceNote">Evidence note</label>
+            <span class="field-hint" id="evidence-hint">Write what you observed, including a barrier. A note or URL is required.</span>
+            <textarea id="evidenceNote" name="note" rows="5" maxlength="2000" aria-describedby="evidence-hint evidence-error note-error"></textarea>
+            <span class="field-error" id="evidence-error"></span>
+            <span class="field-error" id="note-error"></span>
+          </div>
+
+          <div class="field">
+            <label for="evidenceUrl">Evidence URL <span class="optional">(optional)</span></label>
+            <span class="field-hint" id="url-hint">Use a complete http:// or https:// URL. It stays in this browser.</span>
+            <input id="evidenceUrl" name="url" type="url" inputmode="url" placeholder="https://…" aria-describedby="url-hint url-error">
+            <span class="field-error" id="url-error"></span>
+          </div>
+
+          <div class="field compact-field">
+            <label for="postConfidence">Confidence after the test</label>
+            <span class="field-hint" id="post-hint">Do not force it upward. Evidence can lower confidence.</span>
+            <div class="number-suffix">
+              <input id="postConfidence" name="postConfidence" type="number" min="0" max="100" step="1" value="30" inputmode="numeric" required aria-describedby="post-hint postConfidence-error">
+              <span aria-hidden="true">%</span>
+            </div>
+            <span class="field-error" id="postConfidence-error"></span>
+          </div>
+
+          <div class="action-row">
+            <button id="back-to-sprint" class="button button-secondary" type="button">Back to sprint</button>
+            <button class="button button-primary" type="submit">Save evidence receipt</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="receipt-panel" class="flow-panel" aria-labelledby="receipt-title" hidden>
+        <div class="panel-heading">
+          <p class="eyebrow">Evidence recorded locally</p>
+          <h2 id="receipt-title" tabindex="-1">Your proof receipt</h2>
+        </div>
+        <article id="receipt" class="receipt"></article>
+        <button id="new-goal" class="button button-primary" type="button">Name another impossible thing</button>
+      </section>
+    </section>
+
+    <section class="history-section" aria-labelledby="history-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Private local record</p>
+          <h2 id="history-title">Evidence history</h2>
+        </div>
+        <button id="clear-data" class="button button-danger" type="button">Clear local data</button>
+      </div>
+      <p id="history-empty" class="empty-state">No goals yet. Your first mission and receipt will appear here.</p>
+      <ol id="history-list" class="history-list"></ol>
+    </section>
+
+    <section class="evolution-section" aria-labelledby="evolution-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">12-frame autonomous evolution</p>
+          <h2 id="evolution-title">Product evolution timeline</h2>
+        </div>
+        <p>Frame 1 is shipped. Future frames remain deliberately open.</p>
+      </div>
+      <ol id="evolution-timeline" class="timeline" aria-live="polite">
+        <li class="timeline-loading">Loading evolution evidence…</li>
+      </ol>
+    </section>
+
+    <section class="privacy-section" aria-labelledby="privacy-title">
+      <p class="eyebrow">Privacy boundary</p>
+      <h2 id="privacy-title">Your goal never leaves this browser.</h2>
+      <p>There are no accounts, analytics, third-party scripts, AI calls, or backend requests. Goal data is stored in this browser’s local storage. Clearing site data or using the button above removes it. URLs you save are not fetched by the app.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Proof of Possible · Frame 1</p>
+    <a href="./evolution/frames/frame-01.json">View machine-readable evolution evidence</a>
+  </footer>
+
+  <dialog id="clear-dialog" aria-labelledby="clear-dialog-title">
+    <h2 id="clear-dialog-title">Clear all local evidence?</h2>
+    <p>This permanently removes every goal, sprint, and receipt from this browser. It cannot be undone.</p>
+    <div class="action-row">
+      <button id="cancel-clear" class="button button-secondary" type="button">Keep my data</button>
+      <button id="confirm-clear" class="button button-danger" type="button">Clear everything</button>
+    </div>
+  </dialog>
+</body>
+</html>

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "product": "Proof of Possible",
+  "frames": [
+    {
+      "frame": 1,
+      "status": "shipped",
+      "title": "From paralysis to one honest signal",
+      "summary": "The private core loop is usable end to end without an account, backend, or AI dependency.",
+      "mutations": [
+        "Name + Compress the Impossible",
+        "Run One Proof Sprint",
+        "Evidence Receipt + Value Measurement"
+      ]
+    },
+    {
+      "frame": 2,
+      "status": "pending",
+      "title": "Pending evolution",
+      "summary": "Mutation will be selected from observed evidence, not predetermined."
+    },
+    {
+      "frame": 3,
+      "status": "pending",
+      "title": "Pending evolution",
+      "summary": "Mutation will be selected from observed evidence, not predetermined."
+    },
+    {
+      "frame": 4,
+      "status": "pending",
+      "title": "Pending evolution",
+      "summary": "Mutation will be selected from observed evidence, not predetermined."
+    },
+    {
+      "frame": 5,
+      "status": "pending",
+      "title": "Pending evolution",
+      "summary": "Mutation will be selected from observed evidence, not predetermined."
+    },
+    {
+      "frame": 6,
+      "status": "pending",
+      "title": "Pending evolution",
+      "summary": "Mutation will be selected from observed evidence, not predetermined."
+    },
+    {
+      "frame": 7,
+      "status": "pending",
+      "title": "Pending evolution",
+      "summary": "Mutation will be selected from observed evidence, not predetermined."
+    },
+    {
+      "frame": 8,
+      "status": "pending",
+      "title": "Pending evolution",
+      "summary": "Mutation will be selected from observed evidence, not predetermined."
+    },
+    {
+      "frame": 9,
+      "status": "pending",
+      "title": "Pending evolution",
+      "summary": "Mutation will be selected from observed evidence, not predetermined."
+    },
+    {
+      "frame": 10,
+      "status": "pending",
+      "title": "Pending evolution",
+      "summary": "Mutation will be selected from observed evidence, not predetermined."
+    },
+    {
+      "frame": 11,
+      "status": "pending",
+      "title": "Pending evolution",
+      "summary": "Mutation will be selected from observed evidence, not predetermined."
+    },
+    {
+      "frame": 12,
+      "status": "pending",
+      "title": "Pending evolution",
+      "summary": "Mutation will be selected from observed evidence, not predetermined."
+    }
+  ]
+}

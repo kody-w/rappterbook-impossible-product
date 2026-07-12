@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "frame": 1,
+  "seed": "The Impossible Product.",
+  "product": {
+    "name": "Proof of Possible",
+    "thesis": "A private, local-first browser app that turns an overwhelming goal into one small falsifiable real-world experiment and records evidence, replacing paralysis with evidence-backed agency.",
+    "targetUsers": "Stalled solo builders and learners",
+    "ethicalBoundary": "The product does not trivialize structural barriers. A blocked result is valid evidence."
+  },
+  "strategyLenses": [
+    {
+      "id": 1,
+      "lens": "Jobs to be Done",
+      "sourceSummary": "JTBD Proof of Possible—structured brief, risk assumption, 48-hour evidence experiment",
+      "proposalSummary": "Frame the job as producing credible evidence instead of completing the full ambition.",
+      "consensusScore": 23,
+      "scoreOutOf": 25,
+      "rationale": "Strong thesis and outcome fit; the 48-hour horizon was compressed to a ten-minute first-use loop."
+    },
+    {
+      "id": 2,
+      "lens": "Constraint-first product strategy",
+      "sourceSummary": "constraint-first private goal→constraint→experiment with local continuity and production spine",
+      "proposalSummary": "Start from the binding constraint and preserve a private, resumable experiment state.",
+      "consensusScore": 25,
+      "scoreOutOf": 25,
+      "rationale": "Highest alignment with honesty, privacy, feasibility, and an end-to-end Frame 1 production spine."
+    },
+    {
+      "id": 3,
+      "lens": "Growth",
+      "sourceSummary": "growth Proof Card with useful forks",
+      "proposalSummary": "Create a compact proof artifact that could later support useful, non-performative sharing and forks.",
+      "consensusScore": 17,
+      "scoreOutOf": 25,
+      "rationale": "The receipt is valuable, but public sharing was deferred because privacy and core-loop evidence come first."
+    },
+    {
+      "id": 4,
+      "lens": "Behavior change",
+      "sourceSummary": "behavior-change Impossible/10 with immutable micro-deliverable, sprint, behavior receipt",
+      "proposalSummary": "Use a hard ten-minute ceiling, preserve the original promise, and close with a behavior receipt.",
+      "consensusScore": 24,
+      "scoreOutOf": 25,
+      "rationale": "Directly attacks avoidance while immutable provenance prevents quiet goalpost movement."
+    },
+    {
+      "id": 5,
+      "lens": "Emotional design",
+      "sourceSummary": "emotional Proof of Possible with Name/Proof Turn/Evidence Receipt",
+      "proposalSummary": "Move the user through naming, a single proof turn, and a dignified evidence receipt.",
+      "consensusScore": 24,
+      "scoreOutOf": 25,
+      "rationale": "Gives the product a humane emotional arc without relying on cheerleading or false certainty."
+    },
+    {
+      "id": 6,
+      "lens": "Technical architecture",
+      "sourceSummary": "technical local-first browser tool with core journey/persistence/CI",
+      "proposalSummary": "Ship a zero-dependency static browser app with pure domain logic, local persistence, tests, and CI.",
+      "consensusScore": 25,
+      "scoreOutOf": 25,
+      "rationale": "Best fit for GitHub Pages, privacy, resilience, auditability, and zero-friction maintenance."
+    },
+    {
+      "id": 7,
+      "lens": "Trust and accessibility",
+      "sourceSummary": "trust/accessibility impossibility debugger with inspectable hypothesis and private timeline",
+      "proposalSummary": "Make the hypothesis inspectable, controls accessible, constraints explicit, and history private.",
+      "consensusScore": 24,
+      "scoreOutOf": 25,
+      "rationale": "Trust is essential for sensitive goals; inspectability and accessibility are product behavior, not polish."
+    },
+    {
+      "id": 8,
+      "lens": "Vertical-market differentiation",
+      "sourceSummary": "differentiated renter evidence packet (minority vertical-market proposal)",
+      "proposalSummary": "Specialize the evidence flow into a renter-oriented packet for a concrete high-stakes use case.",
+      "consensusScore": 13,
+      "scoreOutOf": 25,
+      "rationale": "A useful minority direction, but too narrow for validating the general core loop in Frame 1."
+    }
+  ],
+  "consensus": {
+    "scoringMethod": "Eight strategy proposals were scored on thesis fit, user value, trust, evidence quality, and Frame 1 feasibility; each dimension contributed up to five points.",
+    "maximumScore": 25,
+    "decisionRationale": "The convergence favored a private constraint-first loop: name the goal and barrier, create one inspectable experiment, run a real wall-clock sprint, and preserve any result as evidence. Growth sharing and the renter vertical were deliberately deferred.",
+    "convergedPrinciples": [
+      "Agency comes from evidence, not motivation theater.",
+      "The smallest test must still touch reality and be falsifiable.",
+      "Structural barriers remain explicit; blocked is a first-class outcome.",
+      "Private local continuity precedes social or growth mechanics.",
+      "The original mission and every simplification remain inspectable."
+    ]
+  },
+  "selectedMutations": [
+    {
+      "id": "name-compress",
+      "name": "NAME + COMPRESS THE IMPOSSIBLE",
+      "summary": "Accessible intake captures goal, meaning, binding obstacle, observable proof, a one-to-ten-minute timebox, and baseline confidence, then deterministically produces one editable experiment."
+    },
+    {
+      "id": "proof-sprint",
+      "name": "RUN ONE PROOF SPRINT",
+      "summary": "A reload-persistent wall-clock countdown has no pause and closes only through completed, attempted, or blocked; simplification preserves provenance and the original deadline."
+    },
+    {
+      "id": "evidence-receipt",
+      "name": "EVIDENCE RECEIPT + VALUE MEASUREMENT",
+      "summary": "A local receipt records evidence and post-confidence, displays confidence delta and history, and measures First-Evidence Rate."
+    }
+  ],
+  "acceptanceCriteria": {
+    "name-compress": [
+      "All six intake dimensions are labeled, keyboard reachable, and validated.",
+      "Timebox is a whole number from one through ten minutes.",
+      "Generation is deterministic and the mission, observable success, and stop condition remain editable.",
+      "Empty or invalid intake and edited plans cannot advance."
+    ],
+    "proof-sprint": [
+      "The timer is based on a persisted wall-clock deadline and survives reload.",
+      "There is no pause control or hidden deadline reset.",
+      "The only recorded outcomes are completed, attempted, and blocked.",
+      "A user can simplify a running mission while retaining original plan, revisions, reason, and deadline."
+    ],
+    "evidence-receipt": [
+      "An outcome requires an evidence note or a valid HTTP(S) URL.",
+      "The receipt displays baseline confidence, post-confidence, and signed delta.",
+      "Goals and receipts persist in local browser history without telemetry.",
+      "First-Evidence Rate equals goals with outcomes divided by goals created and is visible.",
+      "The UI consumes a static 12-frame evolution timeline with Frame 1 shipped and later frames pending."
+    ],
+    "production": [
+      "Responsive semantic UI includes visible focus, clear errors, keyboard controls, and reduced-motion handling.",
+      "No third-party runtime requests, backend, account, or AI dependency exists.",
+      "Core state, validation, timer, metrics, serialization, and deployment invariants have automated tests.",
+      "GitHub Actions validates main and deploys the static site through GitHub Pages."
+    ]
+  },
+  "metrics": {
+    "baseline": {
+      "goalsCreated": 0,
+      "outcomesRecorded": 0,
+      "firstEvidenceRate": 0,
+      "capturedAt": "2026-07-12T02:03:31.976Z"
+    },
+    "live": {
+      "scope": "Per browser profile",
+      "source": "Computed locally from persisted goal and outcome records",
+      "formula": "goals with recorded outcomes / goals created",
+      "initialGoalsCreated": 0,
+      "initialOutcomesRecorded": 0,
+      "initialFirstEvidenceRate": 0,
+      "telemetry": "none"
+    }
+  },
+  "tests": {
+    "command": "node --test tests/*.test.mjs",
+    "staticCommand": "node scripts/check-static.mjs",
+    "status": "passed",
+    "passed": 16,
+    "failed": 0,
+    "recordedAt": "2026-07-12T02:11:13Z"
+  },
+  "release": {
+    "implementationCommitSha": null,
+    "deployedUrl": "https://kody-w.github.io/rappterbook-impossible-product/",
+    "deploymentStatus": "Pages configured for workflow deployment; initial workflow pending",
+    "pagesWorkflow": ".github/workflows/pages.yml"
+  },
+  "timestamp": "2026-07-12T02:03:31.976Z"
+}

@@ -868,6 +868,20 @@ dd {
   box-shadow: 0 8px 24px rgba(23, 33, 27, 0.08);
 }
 
+.receipt > *,
+.receipt dl,
+.receipt dl > div,
+.history-card > *,
+.history-meta > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.receipt a {
+  display: inline-block;
+  word-break: break-all;
+}
+
 .decision-card {
   padding: 1.2rem;
   border: 1px solid var(--brand);

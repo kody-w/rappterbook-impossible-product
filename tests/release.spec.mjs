@@ -124,9 +124,10 @@ async function assertNoHorizontalOverflow(page, stateName) {
       offenders,
     };
   });
-  expect(dimensions.documentWidth, `${stateName} document width`).toBeLessThanOrEqual(
-    dimensions.viewport,
-  );
+  expect(
+    dimensions.documentWidth,
+    `${stateName} document width; offenders=${JSON.stringify(dimensions.offenders)}`,
+  ).toBeLessThanOrEqual(dimensions.viewport);
   expect(dimensions.offenders, `${stateName} overflowing elements`).toEqual([]);
 }
 

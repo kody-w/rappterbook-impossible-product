@@ -267,7 +267,7 @@ h3 {
 
 .metric-grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr));
   gap: 0.9rem;
 }
 
@@ -843,13 +843,87 @@ dd {
   padding: 0 1rem 1rem;
 }
 
+.check-row {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.8rem;
+  align-items: start;
+  font-weight: 500;
+}
+
+.check-row input {
+  width: 1.25rem;
+  min-height: 1.25rem;
+  margin-top: 0.2rem;
+}
+
+.check-row strong {
+  display: block;
+}
+
+.handoff-field textarea,
+.handoff-card pre {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.88rem;
+}
+
+.handoff-card,
+.lineage-card,
+.decision-brief {
+  min-width: 0;
+  max-width: 100%;
+  padding: clamp(1rem, 4vw, 1.5rem);
+  margin: 1.2rem 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.handoff-card h3,
+.lineage-card h3,
+.decision-brief h3 {
+  margin: 0.25rem 0;
+}
+
+.handoff-card pre {
+  max-width: 100%;
+  padding: 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.effort-controls {
+  padding: 1rem;
+  margin: 1rem 0;
+  border-left: 4px solid var(--accent);
+  background: var(--surface-soft);
+}
+
+.sprint-actions {
+  margin-top: 1.5rem;
+}
+
 .criterion-reminder {
   display: grid;
+  min-width: 0;
   gap: 0.4rem;
   padding: 1rem;
   margin-bottom: 1.25rem;
   border-left: 4px solid var(--accent);
   background: var(--surface-soft);
+}
+
+.criterion-reminder > * {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .optional {
@@ -899,6 +973,72 @@ dd {
 .decision-card > p:not(.card-label) {
   margin: 0.4rem 0 1rem;
   color: var(--muted);
+}
+
+.decision-card .field {
+  margin: 1rem 0;
+}
+
+.decision-options {
+  margin-top: 1rem;
+  background: #fff;
+}
+
+.decision-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  padding: 0 1rem 1rem;
+}
+
+.decision-grid .button {
+  width: 100%;
+}
+
+.decision-brief {
+  border-color: var(--brand);
+  background: var(--brand-pale);
+}
+
+.decision-brief p {
+  margin: 0.55rem 0;
+}
+
+.lineage-card {
+  background: #fff;
+}
+
+.lineage-card > ol {
+  display: grid;
+  gap: 0.9rem;
+  padding: 0;
+  list-style: none;
+}
+
+.lineage-card > ol > li {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.lineage-card h4 {
+  margin: 0 0 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.lineage-card dl {
+  margin: 0;
+}
+
+.lineage-card dd,
+.lineage-card dt {
+  overflow-wrap: anywhere;
+}
+
+.lineage-card .duplicate-proof {
+  border-color: var(--accent);
+  background: #fff8e8;
 }
 
 .receipt-header {
@@ -1190,8 +1330,13 @@ dialog h2 {
 
   .action-row .button,
   .flow-panel > .button,
-  .data-actions .button {
+  .data-actions .button,
+  .decision-grid .button {
     width: 100%;
+  }
+
+  .decision-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .timeline {

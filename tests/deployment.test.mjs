@@ -30,14 +30,15 @@ test("deployment smoke validates and builds a complete static artifact", async (
     await access(new URL("../_site/src/app.mjs", import.meta.url));
     await access(new URL("../_site/evolution/frames/frame-01.json", import.meta.url));
     await access(new URL("../_site/evolution/frames/frame-02.json", import.meta.url));
-    await access(new URL("../_site/evolution/strategies/frame-02/reliability.md", import.meta.url));
+    await access(new URL("../_site/evolution/frames/frame-03.json", import.meta.url));
+    await access(new URL("../_site/evolution/strategies/frame-03/science.md", import.meta.url));
     await access(new URL("../_site/provenance.json", import.meta.url));
     const deployedHtml = await readFile(new URL("../_site/index.html", import.meta.url), "utf8");
     const provenance = JSON.parse(
       await readFile(new URL("../_site/provenance.json", import.meta.url), "utf8"),
     );
     assert.match(deployedHtml, /Proof of Possible/);
-    assert.match(deployedHtml, /Frame 2/);
+    assert.match(deployedHtml, /v3\.0\.0 · Frame 3/);
     assert.doesNotMatch(deployedHtml, /(?:src|href)=["']https?:\/\//i);
     assert.equal(provenance.buildTimestamp, fixedBuildTimestamp);
     assert.equal(typeof provenance.GITHUB_SHA, "string");

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Proof of Possible compiles one constrained goal into a private, preregistered ten-minute experiment.">
+  <meta name="description" content="Proof of Possible compiles one uncertain assumption into a safe, decision-grade real-world probe.">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>Proof of Possible</title>
@@ -24,9 +24,9 @@
 
   <main id="main-content" tabindex="-1">
     <section class="hero" aria-labelledby="hero-title">
-      <p class="eyebrow">One honest test. Not a motivational speech.</p>
-      <h1 id="hero-title">Turn “impossible” into evidence.</h1>
-      <p class="hero-copy">Give the compiler one goal, one real constraint, and one proof pattern. It will prepare a concrete experiment you can edit and preregister.</p>
+      <p class="eyebrow">One uncertain assumption. One discriminating signal.</p>
+      <h1 id="hero-title">Turn “impossible” into a decision.</h1>
+      <p class="hero-copy">Name what you believe, the unit it concerns, the signal that could change your mind, and the decision it informs. The compiler produces a safe, executable probe—not advice about making one.</p>
       <div class="principle" role="note">
         <strong>Blocked is a valid result.</strong>
         <span>This tool will not pretend effort can erase money, access, safety, discrimination, disability, care duties, or other structural constraints.</span>
@@ -46,23 +46,23 @@
       Saved workspace copies could not be validated. An empty workspace was opened.
     </div>
     <div id="migration-notice" class="notice" role="status" hidden>
-      Your Frame 1 workspace was safely upgraded to the Frame 2 format.
+      Your earlier workspace was safely upgraded to the Frame 3 belief-lineage format.
     </div>
     <p id="app-status" class="sr-only" aria-live="polite"></p>
 
     <section class="workspace" aria-label="Experiment workspace">
       <ol class="stepper" aria-label="Workflow steps">
-        <li data-step="intake"><span>1</span> Define task</li>
-        <li data-step="review"><span>2</span> Review</li>
-        <li data-step="sprint"><span>3</span> Run</li>
-        <li data-step="receipt"><span>4</span> Decide</li>
+        <li data-step="intake"><span>1</span> Assumption</li>
+        <li data-step="review"><span>2</span> Preregister</li>
+        <li data-step="sprint"><span>3</span> Act</li>
+        <li data-step="receipt"><span>4</span> Interpret</li>
       </ol>
 
       <section id="intake-panel" class="flow-panel" aria-labelledby="intake-title">
         <div class="panel-heading">
-          <p class="eyebrow">Minimum viable input</p>
-          <h2 id="intake-title" tabindex="-1">What needs a real-world answer?</h2>
-          <p>Two short inputs and one proof choice are enough. Your draft autosaves without entering history or metrics.</p>
+          <p class="eyebrow">Assumption first</p>
+          <h2 id="intake-title" tabindex="-1">What belief should this decision test?</h2>
+          <p>Be specific enough that one observable signal could support, weaken, or leave it unresolved. Your draft autosaves without entering history or metrics.</p>
         </div>
 
         <form id="intake-form" novalidate>
@@ -72,10 +72,31 @@
           </div>
 
           <div class="field">
-            <label for="goal">Goal</label>
-            <span class="field-hint" id="goal-hint">Name one thing you want to make, learn, send, verify, or change.</span>
+            <label for="goal">Decision this proof will inform</label>
+            <span class="field-hint" id="goal-hint">Name the choice you will make differently after useful evidence.</span>
             <textarea id="goal" name="goal" rows="2" maxlength="240" required aria-describedby="goal-hint goal-error"></textarea>
             <span class="field-error" id="goal-error"></span>
+          </div>
+
+          <div class="field">
+            <label for="assumptionTarget">Target or unit</label>
+            <span class="field-hint" id="assumptionTarget-hint">One person, team, workflow, artifact, requirement, or other unit—not “everyone.”</span>
+            <input id="assumptionTarget" name="assumptionTarget" maxlength="160" required aria-describedby="assumptionTarget-hint assumptionTarget-error">
+            <span class="field-error" id="assumptionTarget-error"></span>
+          </div>
+
+          <div class="field">
+            <label for="assumptionClaim">Uncertain assumption</label>
+            <span class="field-hint" id="assumptionClaim-hint">Write a claim that could be weakened, not a task you have already chosen.</span>
+            <textarea id="assumptionClaim" name="assumptionClaim" rows="3" maxlength="400" required aria-describedby="assumptionClaim-hint assumptionClaim-error"></textarea>
+            <span class="field-error" id="assumptionClaim-error"></span>
+          </div>
+
+          <div class="field">
+            <label for="assumptionSignal">Observable signal</label>
+            <span class="field-hint" id="assumptionSignal-hint">What visible answer, threshold, behavior, requirement, or artifact property would discriminate the claim?</span>
+            <textarea id="assumptionSignal" name="assumptionSignal" rows="2" maxlength="400" required aria-describedby="assumptionSignal-hint assumptionSignal-error"></textarea>
+            <span class="field-error" id="assumptionSignal-error"></span>
           </div>
 
           <div class="field">
@@ -86,8 +107,8 @@
           </div>
 
           <fieldset class="proof-options">
-            <legend>Choose one deterministic proof pattern</legend>
-            <p class="field-hint" id="proof-pattern-hint">Pick the least costly pattern that touches reality.</p>
+            <legend>Choose one proof pattern</legend>
+            <p class="field-hint" id="proof-pattern-hint">Pick the least costly pattern that could discriminate the assumption.</p>
             <label>
               <input id="proof-pattern-ask" type="radio" name="proofPattern" value="ask">
               <span><strong>Ask a real person</strong>One person, one focused question.</span>
@@ -107,6 +128,42 @@
           </fieldset>
           <span class="field-error" id="proofPattern-error"></span>
 
+          <fieldset class="proof-options route-options">
+            <legend>Choose a fit for your barrier and capacity</legend>
+            <p class="field-hint">You can change this before freezing. Stop is a valid route.</p>
+            <label>
+              <input id="route-act-now" type="radio" name="route" value="act_now" checked>
+              <span><strong>Act safely now</strong>Use the executable handoff only if the risk is acceptable.</span>
+            </label>
+            <label>
+              <input type="radio" name="route" value="prepare_private">
+              <span><strong>Prepare privately</strong>Create the payload or skeleton without contacting anyone.</span>
+            </label>
+            <label>
+              <input type="radio" name="route" value="seek_support">
+              <span><strong>Seek trusted support or accommodation</strong>Prepare a minimum-disclosure request or access check.</span>
+            </label>
+            <label>
+              <input type="radio" name="route" value="safe_stop">
+              <span><strong>Stop safely</strong>Preserve a dignified private stop note; no outbound action is required.</span>
+            </label>
+          </fieldset>
+          <span class="field-error" id="route-error"></span>
+
+          <details class="optional-details safety-details">
+            <summary>Safety and retaliation controls</summary>
+            <div class="optional-fields">
+              <label class="check-row">
+                <input id="safetySensitive" name="safetySensitive" type="checkbox">
+                <span><strong>This situation may be unsafe or retaliation-sensitive.</strong> Ask/send probes will compile privately unless I explicitly opt in below.</span>
+              </label>
+              <label class="check-row">
+                <input id="outboundOptIn" name="outboundOptIn" type="checkbox">
+                <span><strong>I explicitly opt in to outbound contact.</strong> This is never inferred from choosing ask or send.</span>
+              </label>
+            </div>
+          </details>
+
           <p id="draft-status" class="draft-status" role="status" aria-live="polite">Draft not saved yet.</p>
           <button class="button button-primary" type="submit">Compile one experiment</button>
         </form>
@@ -114,17 +171,38 @@
 
       <section id="review-panel" class="flow-panel" aria-labelledby="review-title" hidden>
         <div class="panel-heading">
-          <p class="eyebrow">Editable before commitment</p>
-          <h2 id="review-title" tabindex="-1">Review the compiled mission</h2>
-          <p>Starting freezes the mission and criterion. Change them now; later revisions become linked successors rather than rewritten history.</p>
+          <p class="eyebrow">One-decision review</p>
+          <h2 id="review-title" tabindex="-1">Review the executable probe</h2>
+          <p>Freeze only when the route, pacing, handoff, and three directional branches fit. Advanced details stay folded unless you need them.</p>
         </div>
 
         <div id="review-context" class="constraint-card"></div>
 
         <form id="review-form" novalidate>
           <div id="review-errors" class="error-summary" role="alert" tabindex="-1" hidden>
-            <h3>Make the mission runnable</h3>
+            <h3>Make the probe runnable and diagnostic</h3>
             <ul></ul>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="reviewProofPattern">Proof action</label>
+              <select id="reviewProofPattern" name="proofPattern">
+                <option value="ask">Ask a real person</option>
+                <option value="make">Make a tiny artifact</option>
+                <option value="check">Check a real constraint</option>
+                <option value="send">Send a reversible probe</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="reviewRoute">Barrier-aware route</label>
+              <select id="reviewRoute" name="route">
+                <option value="act_now">Act safely now</option>
+                <option value="prepare_private">Prepare privately</option>
+                <option value="seek_support">Seek support/accommodation</option>
+                <option value="safe_stop">Stop safely</option>
+              </select>
+            </div>
           </div>
 
           <div class="field">
@@ -134,12 +212,35 @@
             <span class="field-error" id="mission-error"></span>
           </div>
 
-          <div class="field">
-            <label for="successCriterion">Binary or explicit success criterion</label>
-            <span class="field-hint">You will judge this exact text as observed, not observed, blocked, or inconclusive.</span>
-            <textarea id="successCriterion" name="successCriterion" rows="3" maxlength="400" required aria-describedby="successCriterion-error"></textarea>
-            <span class="field-error" id="successCriterion-error"></span>
+          <div class="field handoff-field">
+            <label for="artifactPayload">Copy-ready payload or artifact/check skeleton</label>
+            <span class="field-hint">This is the thing you can copy and begin. Edit placeholders now. Outbound-sensitive routes stay private without opt-in.</span>
+            <textarea id="artifactPayload" name="artifactPayload" rows="9" maxlength="4000" required aria-describedby="artifactPayload-error"></textarea>
+            <span class="field-error" id="artifactPayload-error"></span>
           </div>
+
+          <details class="optional-details diagnostic-details">
+            <summary>Directional interpretation branches</summary>
+            <div class="optional-fields">
+              <p class="inline-note">Sending, opening, or completing alone never satisfies the belief criterion.</p>
+              <div class="field">
+                <label for="supportsBranch">Supports</label>
+                <textarea id="supportsBranch" name="supportsBranch" rows="3" maxlength="600" required aria-describedby="branchSupports-error"></textarea>
+                <span class="field-error" id="branchSupports-error"></span>
+              </div>
+              <div class="field">
+                <label for="weakensBranch">Weakens</label>
+                <textarea id="weakensBranch" name="weakensBranch" rows="3" maxlength="600" required aria-describedby="branchWeakens-error"></textarea>
+                <span class="field-error" id="branchWeakens-error"></span>
+              </div>
+              <div class="field">
+                <label for="inconclusiveBranch">Inconclusive</label>
+                <textarea id="inconclusiveBranch" name="inconclusiveBranch" rows="3" maxlength="600" required aria-describedby="branchInconclusive-error"></textarea>
+                <span class="field-error" id="branchInconclusive-error"></span>
+              </div>
+            </div>
+          </details>
+          <input id="successCriterion" name="successCriterion" type="hidden">
 
           <div class="field-row">
             <div class="field">
@@ -149,8 +250,18 @@
               <span class="field-error" id="scopeValue-error"></span>
             </div>
             <div class="field">
-              <label for="timeboxMinutes">Hard timebox</label>
-              <span class="field-hint" id="timebox-hint">One to ten minutes; expiry does not invalidate a result.</span>
+              <label for="pacingMode">Pacing</label>
+              <span class="field-hint">Choose wall-clock countdown, active effort only, or no clock.</span>
+              <select id="pacingMode" name="pacingMode">
+                <option value="countdown">Countdown</option>
+                <option value="active_effort">Active-effort cap</option>
+                <option value="untimed">Untimed</option>
+              </select>
+              <span class="field-error" id="pacingMode-error"></span>
+            </div>
+            <div class="field" id="timebox-field">
+              <label for="timeboxMinutes">Minute cap</label>
+              <span class="field-hint" id="timebox-hint">One to ten minutes. Waiting for an ask/send response is paused in active-effort mode.</span>
               <select id="timeboxMinutes" name="timeboxMinutes" aria-describedby="timebox-hint timeboxMinutes-error">
                 <option value="1">1 minute</option>
                 <option value="2">2 minutes</option>
@@ -183,7 +294,7 @@
                 <textarea id="why" name="why" rows="2" maxlength="400"></textarea>
               </div>
               <div class="field compact-field">
-                <label for="baselineConfidence">Confidence before the test <span class="optional">(optional)</span></label>
+                <label for="baselineConfidence">Confidence before the test <span class="optional">(optional; blank is valid)</span></label>
                 <span class="field-hint">0 = none, 100 = certain. This does not have to rise.</span>
                 <div class="number-suffix">
                   <input id="baselineConfidence" name="baselineConfidence" type="number" min="0" max="100" step="1" inputmode="numeric">
@@ -195,23 +306,23 @@
           </details>
 
           <div class="action-row">
-            <button id="start-sprint" class="button button-primary" type="submit">Freeze and start sprint</button>
+            <button id="start-sprint" class="button button-primary" type="submit">Freeze probe</button>
             <button id="back-to-intake" class="button button-secondary" type="button">Back</button>
             <button id="discard-draft" class="button button-text-danger" type="button">Discard draft</button>
           </div>
-          <p class="inline-note">The wall-clock deadline starts immediately. It is a reference, not a performance demand.</p>
+          <p class="inline-note">Freezing starts the probe record. Your separate action timestamp begins only when you choose “Copy &amp; begin” or “Begin without copying.”</p>
         </form>
       </section>
 
       <section id="sprint-panel" class="flow-panel sprint-panel" aria-labelledby="sprint-title" hidden>
         <div class="panel-heading">
-          <p class="eyebrow">Preregistered experiment</p>
-          <h2 id="sprint-title" tabindex="-1">Run only the frozen mission.</h2>
-          <p>Any completed, attempted, or blocked result is useful. The countdown is optional and never changes what counts.</p>
+          <p class="eyebrow">Frozen belief probe</p>
+          <h2 id="sprint-title" tabindex="-1">Copy the handoff, then begin.</h2>
+          <p>Freezing did not start the action. The explicit begin event below records a separate action timestamp. A barrier or safe stop can be recorded without pretending action began.</p>
         </div>
 
         <div id="timer-block" class="timer-block">
-          <p class="timer-label">Optional time remaining</p>
+          <p id="timer-label" class="timer-label">Optional time remaining</p>
           <time id="sprint-timer" class="timer" role="timer" aria-label="Time remaining">00:00</time>
           <p id="timer-note">The deadline continues across reloads. A late result is still valid evidence.</p>
         </div>
@@ -225,8 +336,24 @@
           <p id="active-mission" class="mission-text"></p>
           <dl>
             <div>
-              <dt>Frozen criterion</dt>
+              <dt>Assumption ID</dt>
+              <dd id="active-assumption-id"></dd>
+            </div>
+            <div>
+              <dt>Target / claim</dt>
+              <dd id="active-assumption"></dd>
+            </div>
+            <div>
+              <dt>Support branch</dt>
               <dd id="active-success"></dd>
+            </div>
+            <div>
+              <dt>Weaken branch</dt>
+              <dd id="active-weakens"></dd>
+            </div>
+            <div>
+              <dt>Inconclusive branch</dt>
+              <dd id="active-inconclusive"></dd>
             </div>
             <div>
               <dt>Stop condition</dt>
@@ -240,26 +367,52 @@
               <dt>Frozen at</dt>
               <dd id="frozen-at"></dd>
             </div>
+            <div>
+              <dt>Action began at</dt>
+              <dd id="action-started-at">Not begun</dd>
+            </div>
           </dl>
         </article>
+
+        <section class="handoff-card" aria-labelledby="handoff-title">
+          <div class="frozen-row">
+            <h3 id="handoff-title">Executable handoff</h3>
+            <span id="outbound-badge" class="lock-badge"></span>
+          </div>
+          <pre id="active-payload" tabindex="0"></pre>
+          <div class="action-row">
+            <button id="copy-begin" class="button button-primary" type="button">Copy &amp; begin</button>
+            <button id="begin-only" class="button button-secondary" type="button">Begin without copying</button>
+          </div>
+          <p id="copy-status" class="inline-note" role="status" aria-live="polite"></p>
+        </section>
+
+        <div id="effort-controls" class="effort-controls" hidden>
+          <button id="pause-response" class="button button-secondary" type="button">Waiting for response—pause effort</button>
+          <button id="resume-effort" class="button button-secondary" type="button" hidden>Resume active effort</button>
+          <p id="effort-note" class="inline-note">Only active effort counts. Waiting time is excluded.</p>
+        </div>
 
         <section id="provenance-section" class="provenance" aria-labelledby="provenance-title" hidden>
           <h3 id="provenance-title">Pre-start provenance</h3>
           <ol id="provenance-list"></ol>
         </section>
 
-        <button id="open-outcome" class="button button-primary button-wide" type="button">Record result</button>
+        <div class="action-row sprint-actions">
+          <button id="open-outcome" class="button button-primary" type="button" disabled>Record result</button>
+          <button id="record-barrier" class="button button-secondary" type="button">Record barrier or safe stop</button>
+        </div>
       </section>
 
       <section id="outcome-panel" class="flow-panel" aria-labelledby="outcome-title" hidden>
         <div class="panel-heading">
-          <p class="eyebrow">Criterion-linked receipt</p>
-          <h2 id="outcome-title" tabindex="-1">What did you observe?</h2>
-          <p>The countdown is hidden while you record. Your note is self-recorded evidence, not independently verified truth.</p>
+          <p class="eyebrow">Interpret the frozen branches</p>
+          <h2 id="outcome-title" tabindex="-1">What signal did you observe?</h2>
+          <p>The clock is hidden while you record. Action completion does not decide the belief; choose the branch the observation actually fits.</p>
         </div>
 
         <div class="criterion-reminder" role="note">
-          <strong>Judge this frozen criterion:</strong>
+          <strong>Frozen directional branches:</strong>
           <span id="outcome-criterion"></span>
         </div>
 
@@ -270,9 +423,10 @@
           </div>
 
           <fieldset class="status-options">
-            <legend>Did the action begin?</legend>
-            <label><input id="action-taken" type="radio" name="actionKind" value="taken"> <span><strong>Action taken</strong>Record the action time when this receipt is saved.</span></label>
+            <legend>What happened to the action?</legend>
+            <label><input id="action-taken" type="radio" name="actionKind" value="taken"> <span><strong>Action began</strong>Uses the explicit begin timestamp already recorded.</span></label>
             <label><input id="action-could-not-start" type="radio" name="actionKind" value="could_not_start"> <span><strong>Could not start</strong>Record when the barrier became the result.</span></label>
+            <label><input id="action-safe-stop" type="radio" name="actionKind" value="safe_stop"> <span><strong>Safe stop</strong>Preserve why stopping was the dignified route; no outbound action is implied.</span></label>
           </fieldset>
           <span class="field-error" id="actionKind-error"></span>
 
@@ -281,17 +435,18 @@
             <label><input id="status-completed" type="radio" name="status" value="completed"> <span><strong>Completed</strong>The intended action was completed.</span></label>
             <label><input type="radio" name="status" value="attempted"> <span><strong>Attempted</strong>The action began but did not fully complete.</span></label>
             <label><input type="radio" name="status" value="blocked"> <span><strong>Blocked</strong>A real constraint prevented or stopped the action.</span></label>
+            <label><input id="status-safe-stopped" type="radio" name="status" value="safe_stopped"> <span><strong>Safe stopped</strong>Stopping protected safety, dignity, capacity, or consent.</span></label>
           </fieldset>
           <span class="field-error" id="status-error"></span>
 
           <fieldset class="status-options">
-            <legend>Criterion verdict</legend>
-            <label><input id="verdict-observed" type="radio" name="criterionVerdict" value="observed"> <span><strong>Observed</strong>The frozen criterion was explicitly present.</span></label>
-            <label><input type="radio" name="criterionVerdict" value="not_observed"> <span><strong>Not observed</strong>The criterion was explicitly absent.</span></label>
-            <label><input type="radio" name="criterionVerdict" value="blocked"> <span><strong>Blocked</strong>The criterion could not be checked because of a barrier.</span></label>
-            <label><input type="radio" name="criterionVerdict" value="inconclusive"> <span><strong>Inconclusive</strong>The available signal cannot decide the criterion.</span></label>
+            <legend>Interpretation</legend>
+            <label><input id="interpretation-supports" type="radio" name="interpretation" value="supports"> <span><strong>Supports</strong>The observation meets the preregistered support branch.</span></label>
+            <label><input type="radio" name="interpretation" value="weakens"> <span><strong>Weakens</strong>The observation meets the preregistered weaken branch.</span></label>
+            <label><input type="radio" name="interpretation" value="blocked"> <span><strong>Blocked</strong>Access or safety prevented a directional judgment.</span></label>
+            <label><input type="radio" name="interpretation" value="inconclusive"> <span><strong>Inconclusive</strong>The available signal fits neither directional branch.</span></label>
           </fieldset>
-          <span class="field-error" id="criterionVerdict-error"></span>
+          <span class="field-error" id="interpretation-error"></span>
 
           <div class="field">
             <label for="observation">Separate observation</label>
@@ -301,16 +456,29 @@
           </div>
 
           <div class="field">
+            <label for="diagnosis">Why was this result diagnostic—or not?</label>
+            <select id="diagnosis" name="diagnosis" aria-describedby="diagnosis-hint diagnosis-error">
+              <option value="none">No failure diagnosis needed</option>
+              <option value="weak_test">Weak test design</option>
+              <option value="absent_signal">Signal was absent</option>
+              <option value="rival_explanation">A rival explanation fits</option>
+              <option value="blocked_access">Access, safety, or accommodation blocked</option>
+            </select>
+            <span id="diagnosis-hint" class="field-hint">Inconclusive receipts require a diagnosis. Successors use this instead of blindly shrinking.</span>
+            <span class="field-error" id="diagnosis-error"></span>
+          </div>
+
+          <div class="field">
             <label for="evidenceUrl">Supporting URL <span class="optional">(optional, not fetched or verified)</span></label>
             <input id="evidenceUrl" name="url" type="url" inputmode="url" placeholder="https://…" aria-describedby="url-error">
             <span class="field-error" id="url-error"></span>
           </div>
 
           <div class="field compact-field">
-            <label for="postConfidence">Confidence after the test</label>
-            <span class="field-hint">Do not force it upward. Evidence can lower confidence.</span>
+            <label for="postConfidence">Confidence after the test <span class="optional">(optional; blank is valid)</span></label>
+            <span class="field-hint">Do not invent a number for a blocker. Evidence can lower confidence.</span>
             <div class="number-suffix">
-              <input id="postConfidence" name="postConfidence" type="number" min="0" max="100" step="1" inputmode="numeric" required aria-describedby="postConfidence-error">
+              <input id="postConfidence" name="postConfidence" type="number" min="0" max="100" step="1" inputmode="numeric" aria-describedby="postConfidence-error">
               <span aria-hidden="true">%</span>
             </div>
             <span class="field-error" id="postConfidence-error"></span>
@@ -329,14 +497,45 @@
           <h2 id="receipt-title" tabindex="-1">Receipt and next decision</h2>
         </div>
         <article id="receipt" class="receipt"></article>
+        <section id="decision-brief" class="decision-brief" aria-labelledby="decision-brief-title">
+          <p class="card-label">Local decision brief</p>
+          <h3 id="decision-brief-title">What this lineage says now</h3>
+          <div id="decision-brief-copy"></div>
+        </section>
+        <section class="lineage-card" aria-labelledby="lineage-title">
+          <div class="frozen-row">
+            <div>
+              <p class="card-label">Keyboard-readable record</p>
+              <h3 id="lineage-title">Belief lineage</h3>
+            </div>
+            <span id="lineage-state" class="lock-badge"></span>
+          </div>
+          <p id="lineage-synthesis" class="inline-note"></p>
+          <ol id="lineage-list" tabindex="0" aria-label="Belief lineage steps"></ol>
+        </section>
         <section class="decision-card" aria-labelledby="decision-title">
-          <p class="card-label">Status-specific next step</p>
+          <p class="card-label">Reasoned next decision</p>
           <h3 id="decision-title"></h3>
           <p id="decision-copy"></p>
+          <div class="field">
+            <label for="decision-reason">Reason <span class="optional">(required for an override)</span></label>
+            <textarea id="decision-reason" rows="2" maxlength="400" aria-describedby="decision-error"></textarea>
+            <span id="decision-error" class="field-error"></span>
+          </div>
           <div class="action-row">
             <button id="decision-primary" class="button button-primary" type="button"></button>
             <button id="decision-secondary" class="button button-secondary" type="button"></button>
           </div>
+          <details class="optional-details decision-options">
+            <summary>All reasoned choices</summary>
+            <div class="decision-grid">
+              <button class="button button-secondary" data-decision="conclude" type="button">Conclude / stop</button>
+              <button class="button button-secondary" data-decision="replicate" type="button">Replicate deliberately</button>
+              <button class="button button-secondary" data-decision="pivot" type="button">Revise / pivot</button>
+              <button class="button button-secondary" data-decision="seek_support" type="button">Seek access / support</button>
+              <button class="button button-secondary" data-decision="continue" type="button">Continue</button>
+            </div>
+          </details>
         </section>
       </section>
     </section>
@@ -361,6 +560,10 @@
         <article class="metric-card">
           <span id="metric-evidence" class="metric-value">0</span>
           <span class="metric-label">Criterion-linked receipts</span>
+        </article>
+        <article class="metric-card">
+          <span id="metric-directional" class="metric-value">0</span>
+          <span class="metric-label">Directional belief signals</span>
         </article>
       </div>
     </section>
@@ -400,7 +603,7 @@
           <p class="eyebrow">12-frame autonomous evolution</p>
           <h2 id="evolution-title">Product evolution timeline</h2>
         </div>
-        <p>Frames 1–2 shipped. Frames 3–12 remain evidence-led and pending.</p>
+        <p>Frames 1–3 shipped. Frames 4–12 remain evidence-led and pending.</p>
       </div>
       <ol id="evolution-timeline" class="timeline" aria-live="polite">
         <li class="timeline-loading">Loading evolution evidence…</li>
@@ -415,9 +618,9 @@
   </main>
 
   <footer>
-    <p>Proof of Possible · v2.0.0 · Frame 2</p>
+    <p>Proof of Possible · v3.0.0 · Frame 3</p>
     <p id="release-provenance">Loading deployed release provenance…</p>
-    <a href="./evolution/frames/frame-02.json">View Frame 2 evolution evidence</a>
+    <a href="./evolution/frames/frame-03.json">View Frame 3 evolution evidence</a>
   </footer>
 
   <dialog id="discard-dialog" aria-labelledby="discard-dialog-title">

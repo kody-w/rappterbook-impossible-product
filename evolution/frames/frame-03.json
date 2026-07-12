@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 3,
+  "frame": 3,
+  "seed": "The Impossible Product.",
+  "product": {
+    "name": "Proof of Possible",
+    "version": "3.0.0",
+    "thesis": "Turn one uncertain assumption into a safe executable probe, interpret its directional signal honestly, and preserve every reasoned decision in a recoverable belief lineage.",
+    "ethicalBoundary": "Activity is not belief evidence. Unsafe outbound contact requires explicit opt-in. Blocked and safe-stopped remain dignified results, confidence may stay blank, and directional self-recorded evidence never implies statistical certainty."
+  },
+  "baseline": {
+    "liveUrl": "https://kody-w.github.io/rappterbook-impossible-product/",
+    "acceptedLiveCommitSha": "fdddf6444a0ba2f3fcad81663053b8983fcfac3d",
+    "inspectedAt": "2026-07-12T03:53:20.291Z",
+    "observations": {
+      "workspaceSchemaVersion": 2,
+      "assumptionShape": "goal and constraint, without stable belief identity",
+      "interpretationShape": "observed, not observed, blocked, or inconclusive without directional branches",
+      "actionTiming": "receipt time also represented action time",
+      "pacing": "countdown only",
+      "confidence": "forced numeric before and after",
+      "postReceiptDecisionPersistence": "successor choice only; conclude/stop was not persisted",
+      "lineageSynthesis": "none"
+    }
+  },
+  "strategies": [
+    {
+      "id": "activation",
+      "source": "evolution/strategies/frame-03/activation.md",
+      "theme": "Grade evidence, persist decisions, and expose exact lifecycle states.",
+      "proposal": "Separate probe freeze, begin action, receipt, interpretation, decision, and successor."
+    },
+    {
+      "id": "science",
+      "source": "evolution/strategies/frame-03/science.md",
+      "theme": "Structured assumption, diagnostic matrix, and evidence threshold.",
+      "proposal": "Freeze target/unit, claim, observable signal, decision, plus supports/weakens/inconclusive branches."
+    },
+    {
+      "id": "learning",
+      "source": "evolution/strategies/frame-03/learning.md",
+      "theme": "Preregister belief, select a discriminating next proof, and synthesize lineage.",
+      "proposal": "Keep a stable belief ID and detect contradiction and low-information repetition after two receipts."
+    },
+    {
+      "id": "usecases",
+      "source": "evolution/strategies/frame-03/usecases.md",
+      "theme": "Decision-grade kits, barrier-aware routes, and a local evidence brief.",
+      "proposal": "Compile copy-ready asks/sends and artifact/check skeletons for act, prepare, support, or stop routes."
+    },
+    {
+      "id": "inclusive",
+      "source": "evolution/strategies/frame-03/inclusive.md",
+      "theme": "Safe route, capacity pacing, and nullable confidence.",
+      "proposal": "Offer countdown, active-effort, and untimed modes; exclude response waiting from active effort."
+    },
+    {
+      "id": "localfirst",
+      "source": "evolution/strategies/frame-03/localfirst.md",
+      "theme": "Versioned migration without invented facts.",
+      "proposal": "Migrate Frame 2 into a validated Frame 3 envelope while preserving unknown action-start time.",
+      "minorityProposals": [
+        "encrypted transfer",
+        "offline evidence packets"
+      ]
+    },
+    {
+      "id": "collaboration",
+      "source": "evolution/strategies/frame-03/collaboration.md",
+      "theme": "Minimum disclosure and evidence integrity without adding sharing.",
+      "proposal": "Keep support handoffs private and self-recorded in this frame.",
+      "minorityProposals": [
+        "minimum-disclosure request packet",
+        "tamper-evident response receipt",
+        "evidence firewall"
+      ]
+    },
+    {
+      "id": "experience",
+      "source": "evolution/strategies/frame-03/experience.md",
+      "theme": "Executable handoff, one-decision review, and first-viewport assumption entry.",
+      "proposal": "Put the handoff in the primary path and fold advanced branch editing."
+    }
+  ],
+  "consensus": {
+    "scoringMethod": "Each of eight strategy audits scored every candidate from 1 (do not ship) to 5 (essential now). Totals are unweighted sums out of 40. The three highest candidates at or above 32 were selected; minority transfer and collaboration candidates remain evidence only.",
+    "selectionThreshold": 32,
+    "maximumScore": 40,
+    "candidateScores": [
+      {
+        "id": "decision-grade-assumption-probes",
+        "auditVotes": [5, 5, 5, 5, 4, 4, 3, 5],
+        "total": 36,
+        "rank": 1,
+        "selected": true
+      },
+      {
+        "id": "belief-lineage-reasoned-decisions",
+        "auditVotes": [5, 5, 5, 4, 4, 5, 4, 4],
+        "total": 36,
+        "rank": 2,
+        "selected": true
+      },
+      {
+        "id": "barrier-capacity-aware-routes",
+        "auditVotes": [4, 4, 4, 5, 5, 4, 4, 4],
+        "total": 34,
+        "rank": 3,
+        "selected": true
+      },
+      {
+        "id": "encrypted-offline-transfer",
+        "auditVotes": [1, 2, 2, 2, 2, 4, 2, 2],
+        "total": 17,
+        "rank": 4,
+        "selected": false
+      },
+      {
+        "id": "tamper-evident-collaboration",
+        "auditVotes": [1, 2, 2, 3, 2, 3, 5, 2],
+        "total": 20,
+        "rank": 5,
+        "selected": false
+      }
+    ],
+    "selectedCount": 3,
+    "rationale": "All eight audits converged on stronger decision validity, humane execution fit, and longitudinal learning. Migration, accessibility, release provenance, and browser validation are required release work rather than additional product mutations."
+  },
+  "selectedMutations": [
+    {
+      "id": "decision-grade-assumption-probes",
+      "name": "DECISION-GRADE, ASSUMPTION-FIRST PROBES",
+      "summary": "A stable structured belief compiles to a copy-ready payload or skeleton with preregistered supports, weakens, and inconclusive branches plus an explicit action-start event."
+    },
+    {
+      "id": "barrier-capacity-aware-routes",
+      "name": "BARRIER- AND CAPACITY-AWARE ROUTES",
+      "summary": "Act, private preparation, trusted support/accommodation, and safe-stop routes combine with countdown, active-effort, or untimed pacing and nullable confidence."
+    },
+    {
+      "id": "belief-lineage-reasoned-decisions",
+      "name": "BELIEF LINEAGE + REASONED DECISIONS",
+      "summary": "Every receipt decision is persisted with override reasons, lineage is keyboard-readable, and deterministic synthesis flags contradiction and duplicate low-information proofs."
+    }
+  ],
+  "acceptanceResults": {
+    "decision-grade-assumption-probes": [
+      {
+        "criterion": "Target/unit, claim, observable signal, and decision are required and one belief ID survives proof and successor changes.",
+        "status": "passed",
+        "evidence": "core structured-assumption, strategy-change, successor, migration, and browser lineage tests"
+      },
+      {
+        "criterion": "Every pattern compiles copy-ready executable content and three directional branches that exclude activity alone.",
+        "status": "passed",
+        "evidence": "compiler matrix plus built-artifact handoff and branch journey"
+      },
+      {
+        "criterion": "Probe freeze, explicit action start, and receipt save are distinct timestamps.",
+        "status": "passed",
+        "evidence": "domain timestamp contract and Chromium Copy & begin journey"
+      }
+    ],
+    "barrier-capacity-aware-routes": [
+      {
+        "criterion": "Unsafe ask/send fixtures never produce outbound contact without explicit opt-in.",
+        "status": "passed",
+        "evidence": "domain and browser unsafe-fixture matrix"
+      },
+      {
+        "criterion": "Countdown, active-effort, and untimed pacing persist correctly; ask/send waiting is excluded from active effort.",
+        "status": "passed",
+        "evidence": "timer domain tests and real-browser pause/resume journey"
+      },
+      {
+        "criterion": "Blocked and safe-stop receipts accept nullable confidence and preserve dignified evidence.",
+        "status": "passed",
+        "evidence": "nullable-confidence validation and untimed safe-stop Chromium journey"
+      }
+    ],
+    "belief-lineage-reasoned-decisions": [
+      {
+        "criterion": "Every conclude, replicate, pivot, seek-support, or continue decision persists; overrides require and retain a reason.",
+        "status": "passed",
+        "evidence": "decision unit matrix and successor browser journeys"
+      },
+      {
+        "criterion": "Lineage renders assumption, branches, action/observation, interpretation/confidence effect, decision, and successor.",
+        "status": "passed",
+        "evidence": "keyboard-readable lineage DOM and 320px/200% release checks"
+      },
+      {
+        "criterion": "Two or more receipts deterministically expose contradiction, repetition, current support, and conclude/replicate/pivot choices without certainty language.",
+        "status": "passed",
+        "evidence": "contradiction and duplicate low-information domain/browser contracts"
+      }
+    ],
+    "release": [
+      {
+        "criterion": "Frame 2 primary/journal/export data migrates without loss or invented action-start time.",
+        "status": "passed",
+        "evidence": "migration unit matrix and built-artifact localStorage migration journey"
+      },
+      {
+        "criterion": "Import/export, corruption recovery, additive multi-tab behavior, no third-party requests, focus, and reflow remain release gates.",
+        "status": "passed",
+        "evidence": "unit/static suite and automatic Chromium request/pageerror/console/overflow guards"
+      },
+      {
+        "criterion": "Pages deploys the same built _site bytes tested by Chromium with non-self-referential provenance.",
+        "status": "passed",
+        "evidence": "deployment digest test, single-build Pages workflow, and generated provenance.json"
+      }
+    ]
+  },
+  "localMetrics": {
+    "scope": "Computed only from the local workspace; no telemetry or third-party requests.",
+    "criterionLinkedEvidenceRate": {
+      "formula": "evidence-bearing interpreted receipts / probes frozen",
+      "purpose": "Preserve the honest Frame 2 funnel while exposing its numerator and denominator."
+    },
+    "directionalBeliefSignals": {
+      "formula": "receipts with supports or weakens interpretation after explicit action start",
+      "purpose": "Prevent sending, opening, completion, blocked, or inconclusive activity from satisfying the belief criterion."
+    },
+    "lineageSupportState": {
+      "formula": "deterministic counts of supports, weakens, unresolved, contradiction, and repeated proof fingerprints",
+      "purpose": "Guide conclude, replicate, or pivot without statistical claims."
+    },
+    "activationLatency": {
+      "formula": "actionStartedAt - sprintStartedAt when actionStartedAt exists",
+      "purpose": "Keep the explicit begin event distinct from freezing and receipt time."
+    }
+  },
+  "tests": {
+    "unitAndStaticCommand": "npm test",
+    "browserCommand": "npm run test:e2e",
+    "status": "passed locally; both commands remain mandatory deployment gates",
+    "unitAndDeploymentPassed": 54,
+    "browserPassed": 15,
+    "failed": 0,
+    "recordedAt": "2026-07-12T04:22:43Z",
+    "artifactUnderTest": "_site",
+    "requiredCoverage": [
+      "all routes and proof patterns",
+      "action timestamps",
+      "nullable confidence",
+      "untimed and active-effort pacing",
+      "unsafe outbound fixture",
+      "directional branch interpretations",
+      "persisted lineage decisions and override reasons",
+      "contradiction and duplicate detection",
+      "Frame 2 migration",
+      "320px at 200% text",
+      "keyboard focus",
+      "page and console errors",
+      "built deployment parity"
+    ]
+  },
+  "release": {
+    "baselineCommitSha": "fdddf6444a0ba2f3fcad81663053b8983fcfac3d",
+    "deployedUrl": "https://kody-w.github.io/rappterbook-impossible-product/",
+    "pagesWorkflow": ".github/workflows/pages.yml",
+    "testWorkflow": ".github/workflows/test.yml",
+    "currentDeploymentSourceOfTruth": "/provenance.json",
+    "generatedProvenanceMechanism": "scripts/build.mjs copies source into _site, hashes every artifact file except provenance.json, computes a sorted path-plus-file-hash SHA-256 tree digest, then writes the build GITHUB_SHA, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT, timestamp, git tree SHA, file hashes, and aggregate digest. The frame record intentionally does not self-claim the mutable implementation SHA or run URL."
+  },
+  "timestamps": {
+    "frameStartedAt": "2026-07-12T03:53:05.752Z",
+    "strategyEvidenceCapturedAt": "2026-07-12T04:20:00.000Z",
+    "localValidationCompletedAt": "2026-07-12T04:22:43Z"
+  }
+}

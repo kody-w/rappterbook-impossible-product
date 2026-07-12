@@ -1,9 +1,9 @@
 {
   "name": "proof-of-possible",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
-  "description": "A local-first assisted experiment compiler.",
+  "description": "A local-first compiler for safe, decision-grade belief probes.",
   "scripts": {
     "test": "node --test tests/*.test.mjs && node scripts/check-static.mjs",
     "test:e2e": "npm run build && playwright test",

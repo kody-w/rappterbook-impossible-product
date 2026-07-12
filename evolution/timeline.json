@@ -26,9 +26,14 @@
     },
     {
       "frame": 3,
-      "status": "pending",
-      "title": "Pending evolution",
-      "summary": "Mutation will be selected from observed evidence, not predetermined."
+      "status": "shipped",
+      "title": "From activity receipts to reasoned belief lineage",
+      "summary": "Structured assumptions now compile to safe executable probes, barrier-aware pacing, directional interpretation, persisted decisions, and deterministic lineage synthesis.",
+      "mutations": [
+        "Decision-Grade, Assumption-First Probes",
+        "Barrier- and Capacity-Aware Routes",
+        "Belief Lineage + Reasoned Decisions"
+      ]
     },
     {
       "frame": 4,

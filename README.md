@@ -1,5 +1,9 @@
 # Proof of Possible
 
+<!-- rapp1:network-header:start -->
+[![RAPP/1](https://kody-w.github.io/rapp-hive-public/portfolio/badges/rappterbook-impossible-product.svg)](https://github.com/kody-w/rapp-hive-public/blob/main/portfolio/repos/rappterbook-impossible-product.md) · **New to RAPP?** [Start here: get your Brainstem →](https://github.com/kody-w/rapp-installer#start-here)
+<!-- rapp1:network-header:end -->
+
 **Proof of Possible v3.0.0** is a local-first browser app that compiles one uncertain assumption into a safe, executable real-world probe and preserves the resulting decision lineage.
 
 Completed, attempted, blocked, and safe-stopped remain valid. Activity alone is not belief evidence. Observations are self-recorded and never presented as independently verified or statistically certain.
